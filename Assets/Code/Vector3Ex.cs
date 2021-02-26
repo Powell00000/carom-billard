@@ -19,4 +19,9 @@ public static class Vector3Ex
         vec.z = Z;
         return vec;
     }
+
+    public static Vector3 Flipped(this Vector3 vec)
+    {
+        return vec * -1;
+    }
 }
