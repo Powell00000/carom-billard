@@ -1,3 +1,4 @@
+using System.IO;
 using UnityEngine;
 
 namespace Assets.Code.Gameplay
@@ -6,6 +7,9 @@ namespace Assets.Code.Gameplay
     {
         [SerializeField]
         Rigidbody rgbd;
+
+        [SerializeField]
+        string serializedTransform;
 
         private float radius;
 
@@ -26,6 +30,8 @@ namespace Assets.Code.Gameplay
 
         public void AddForce(Vector3 force)
         {
+            var stream = new MemoryStream();
+            var writer = new BinaryWriter(stream);
             rgbd.AddForce(force, ForceMode.Impulse);
         }
 

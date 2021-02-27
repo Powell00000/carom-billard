@@ -42,13 +42,13 @@ Rigidbody:
   m_GameObject: {fileID: 402560233081603328}
   serializedVersion: 2
   m_Mass: 0.21
-  m_Drag: 0
+  m_Drag: 0.5
   m_AngularDrag: 0.05
   m_UseGravity: 1
   m_IsKinematic: 0
-  m_Interpolate: 0
+  m_Interpolate: 1
   m_Constraints: 0
-  m_CollisionDetection: 0
+  m_CollisionDetection: 1
 --- !u!114 &6307052301260547942
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -122,7 +122,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 2100000, guid: 4e755de8fcc03d748b3cb5e62730e396, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -151,7 +151,7 @@ SphereCollider:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2829728833830955897}
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 13400000, guid: 8408858d623d7c540b18da55d7b22482, type: 2}
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2

@@ -8,6 +8,9 @@ namespace Assets.Code.Gameplay
         Camera cam;
 
         [SerializeField]
+        Cinemachine.CinemachineFreeLook freeLook;
+
+        [SerializeField]
         Ball ball;
 
         private void Update()
