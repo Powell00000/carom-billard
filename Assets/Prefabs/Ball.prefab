@@ -45,7 +45,7 @@ Rigidbody:
   m_Mass: 0.21
   m_Drag: 1
   m_AngularDrag: 1
-  m_UseGravity: 1
+  m_UseGravity: 0
   m_IsKinematic: 1
   m_Interpolate: 0
   m_Constraints: 0
@@ -65,8 +65,7 @@ MonoBehaviour:
   rgbd: {fileID: 83585928703135445}
   sphereCollider: {fileID: 8257660890993480951}
   lineRenderer: {fileID: 8060309019646846267}
-  speed: 0
-  velocity: {x: 0, y: 0, z: 0}
+  CurrentVelocity: {x: 0, y: 0, z: 0}
 --- !u!1 &2829728833830955897
 GameObject:
   m_ObjectHideFlags: 0

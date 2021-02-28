@@ -18,6 +18,9 @@ namespace Assets.Code.Gameplay
         [SerializeField]
         private LineRenderer lineRenderer;
 
+        [SerializeField]
+        private float speed;
+
         private SaveableTransform savedTransform;
         private float radius;
         private Vector3 forceDirection;
@@ -47,6 +50,7 @@ namespace Assets.Code.Gameplay
 
         public void AddVelocity(Vector3 velocity)
         {
+            Debug.Log($"{name} added {velocity} velocity");
             //rgbd.AddForce(velocity, ForceMode.Impulse);
             CurrentVelocity += velocity;
         }
@@ -81,29 +85,38 @@ namespace Assets.Code.Gameplay
             bool hit = Physics.SphereCast(transform.position, radius, CurrentVelocity.normalized, out var hitInfo, distance, LayerMask.GetMask("Ball", "Band"));
             if (hit)
             {
-                if (hitInfo.rigidbody.TryGetComponent<Ball>(out var ball))
+                if (hitInfo.rigidbody.TryGetComponent<Ball>(out var otherBall))
                 {
-                    if (ball != this)
+                    if (otherBall != this)
                     {
-                        ball.AddVelocity(hitInfo.normal + CurrentVelocity);
-                        AddVelocity(ball.CurrentVelocity);
+                        var dot = Vector3.Dot(CurrentVelocity.normalized, hitInfo.normal);
+                        var computedVelocity = CurrentVelocity * dot;
+                        otherBall.AddVelocity(hitInfo.normal * -computedVelocity.magnitude);
+                        CurrentVelocity = Vector3.Reflect(CurrentVelocity, hitInfo.normal);
                     }
-                }
-            }
-            if (Speed > 0)
-            {
-                var nextVelocity = CurrentVelocity.normalized * -1 * Time.deltaTime;
-                if (Vector3.Dot(CurrentVelocity, nextVelocity) > 0)
-                {
-                    CurrentVelocity = Vector3.zero;
                 }
                 else
                 {
+                    CurrentVelocity = Vector3.Reflect(CurrentVelocity, hitInfo.normal);
+                }
+            }
+
+            if (Speed > 0)
+            {
+                var nextVelocity = CurrentVelocity + CurrentVelocity.normalized * -1 * Time.deltaTime;
+                if (Vector3.Dot(CurrentVelocity, nextVelocity) > 0)
+                {
                     CurrentVelocity = nextVelocity;
+                }
+                else
+                {
+                    CurrentVelocity = Vector3.zero;
                 }
             }
 
             transform.position += CurrentVelocity * Time.deltaTime;
+
+            speed = Speed;
         }
 
         private void FixedUpdate()
@@ -162,7 +175,6 @@ namespace Assets.Code.Gameplay
                         if (ball != this)
                         {
                             ball.SetForceDirection(hitInfo.normal * -1);
-                            break;
                         }
 
                     }
