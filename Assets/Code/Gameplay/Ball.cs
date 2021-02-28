@@ -1,5 +1,4 @@
 using Assets.Code.Saveable;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace Assets.Code.Gameplay
@@ -8,6 +7,7 @@ namespace Assets.Code.Gameplay
     {
         [Zenject.Inject]
         private GameplayController gameplayCtrl;
+        private static readonly uint maxPoints = 3;
 
         [SerializeField]
         private Rigidbody rgbd;
@@ -22,8 +22,12 @@ namespace Assets.Code.Gameplay
         private float radius;
         private Vector3 forceDirection;
         private Vector3[] hitPoints;
+        private bool drawLine;
 
-        public bool IsMoving => !rgbd.IsSleeping();
+        public float Speed => CurrentVelocity.magnitude;
+        public Vector3 CurrentVelocity;
+
+        public bool IsMoving => CurrentVelocity.magnitude > 0;//!rgbd.IsSleeping();
 
         private void Awake()
         {
@@ -32,7 +36,7 @@ namespace Assets.Code.Gameplay
 
         public virtual void Initialize()
         {
-            hitPoints = new Vector3[6];
+            hitPoints = new Vector3[maxPoints];
             CalculateRadius();
         }
 
@@ -41,14 +45,92 @@ namespace Assets.Code.Gameplay
             radius = transform.localScale.y / 2;
         }
 
-        public void AddForce(Vector3 force)
+        public void AddVelocity(Vector3 velocity)
         {
-            rgbd.AddForce(force, ForceMode.Impulse);
+            //rgbd.AddForce(velocity, ForceMode.Impulse);
+            CurrentVelocity += velocity;
         }
 
         public void SetForceDirection(Vector3 direction)
         {
+            if (drawLine)
+            {
+                return;
+            }
+
+            drawLine = true;
             forceDirection = direction.normalized;
+            DrawHitLine();
+        }
+
+        private void StickToTable()
+        {
+
+            if (Physics.Raycast(transform.position, Vector3.down, out var raycastHit, LayerMask.GetMask("Table")))
+            {
+                transform.position = transform.position.WithY(raycastHit.point.y + radius);
+            }
+        }
+
+        private void Update()
+        {
+            StickToTable();
+
+            Vector3 extrapolatedPositon = transform.position + CurrentVelocity * Time.fixedDeltaTime;
+            float distance = Vector3.Distance(transform.position, extrapolatedPositon);
+            bool hit = Physics.SphereCast(transform.position, radius, CurrentVelocity.normalized, out var hitInfo, distance, LayerMask.GetMask("Ball", "Band"));
+            if (hit)
+            {
+                if (hitInfo.rigidbody.TryGetComponent<Ball>(out var ball))
+                {
+                    if (ball != this)
+                    {
+                        ball.AddVelocity(hitInfo.normal + CurrentVelocity);
+                        AddVelocity(ball.CurrentVelocity);
+                    }
+                }
+            }
+            if (Speed > 0)
+            {
+                var nextVelocity = CurrentVelocity.normalized * -1 * Time.deltaTime;
+                if (Vector3.Dot(CurrentVelocity, nextVelocity) > 0)
+                {
+                    CurrentVelocity = Vector3.zero;
+                }
+                else
+                {
+                    CurrentVelocity = nextVelocity;
+                }
+            }
+
+            transform.position += CurrentVelocity * Time.deltaTime;
+        }
+
+        private void FixedUpdate()
+        {
+            return;
+            Vector3 extrapolatedPositon = transform.position + rgbd.velocity * Time.fixedDeltaTime;
+            float distance = Vector3.Distance(transform.position, extrapolatedPositon);
+            bool hit = Physics.SphereCast(transform.position, radius, rgbd.velocity.normalized, out var hitInfo, distance, LayerMask.GetMask("Ball", "Band"));
+            if (hit)
+            {
+                if (hitInfo.rigidbody.TryGetComponent<Ball>(out var ball))
+                {
+                    if (ball != this)
+                    {
+                        ball.AddVelocity(hitInfo.normal + rgbd.velocity * rgbd.mass);
+                    }
+                }
+            }
+        }
+
+        private void LateUpdate()
+        {
+            lineRenderer.enabled = drawLine;
+            if (drawLine)
+            {
+                drawLine = false;
+            }
         }
 
         public void Revert()
@@ -62,43 +144,46 @@ namespace Assets.Code.Gameplay
             savedTransform = new SaveableTransform(transform);
         }
 
-        private void Update()
-        {
-            DrawHitLine();
-        }
-
         private void DrawHitLine()
         {
             Vector3 currentDir = forceDirection;
             Vector3 currentPos = transform.position;
             hitPoints[0] = currentPos;
-            for (int i = 0; i < 5; i++)
+            for (int i = 1; i < hitPoints.Length; i++)
             {
                 bool hit = Physics.SphereCast(currentPos, radius, currentDir, out var hitInfo);
                 if (hit)
                 {
                     currentPos = hitInfo.point + hitInfo.normal * radius;
-                    hitPoints[i + 1] = currentPos;
-                    currentDir = Vector3.Reflect(currentDir, hitInfo.normal);
+                    hitPoints[i] = currentPos;
+                    lineRenderer.positionCount = i + 1;
                     if (hitInfo.rigidbody.TryGetComponent<Ball>(out var ball))
                     {
-                        Vector3 hitDirection = hitInfo.point + hitInfo.normal * -1;
-                        ball.SetForceDirection(hitDirection.normalized);
+                        if (ball != this)
+                        {
+                            ball.SetForceDirection(hitInfo.normal * -1);
+                            break;
+                        }
+
                     }
+
+                    currentDir = Vector3.Reflect(currentDir, hitInfo.normal);
                 }
-                else
-                {
-                    if (i > 0)
-                    {
-                        hitPoints[i] = hitPoints[i - 1];
-                    }
-                }
-
-
-
-                lineRenderer.SetPositions(hitPoints);
+            }
+            for (int i = 0; i < hitPoints.Length - 1; i++)
+            {
+                Debug.DrawLine(hitPoints[i], hitPoints[i + 1]);
             }
 
+            lineRenderer.SetPositions(hitPoints);
         }
+
+        private void OnDrawGizmos()
+        {
+            Vector3 extrapolatedPositon = transform.position + CurrentVelocity * Time.fixedDeltaTime;
+            float distance = Vector3.Distance(transform.position, extrapolatedPositon);
+            Gizmos.DrawSphere(transform.position + CurrentVelocity.normalized * distance, radius);
+        }
+
     }
 }

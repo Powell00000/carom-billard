@@ -53,15 +53,15 @@ namespace Assets.Code.Gameplay
 
             if (Input.GetMouseButtonDown(0))
             {
-                savedForce = new SaveableStruct<Vector3>(currentForceDirection * 4);
+                savedForce = new SaveableStruct<Vector3>(currentForceDirection * 8);
                 BallHit?.Invoke();
-                ball.AddForce(savedForce.SavedValue);
+                ball.AddVelocity(savedForce.SavedValue);
             }
         }
 
         public void Revert()
         {
-            ball.AddForce(savedForce.SavedValue);
+            ball.AddVelocity(savedForce.SavedValue);
         }
 
         public void Store()

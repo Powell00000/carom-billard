@@ -27,7 +27,7 @@ Transform:
   m_GameObject: {fileID: 402560233081603328}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.305, y: 0.305, z: 0.305}
+  m_LocalScale: {x: 0.61, y: 0.61, z: 0.61}
   m_Children:
   - {fileID: 6155935327254108623}
   - {fileID: 7303075435653964357}
@@ -46,10 +46,10 @@ Rigidbody:
   m_Drag: 1
   m_AngularDrag: 1
   m_UseGravity: 1
-  m_IsKinematic: 0
-  m_Interpolate: 1
+  m_IsKinematic: 1
+  m_Interpolate: 0
   m_Constraints: 0
-  m_CollisionDetection: 1
+  m_CollisionDetection: 0
 --- !u!114 &6307052301260547942
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -65,6 +65,8 @@ MonoBehaviour:
   rgbd: {fileID: 83585928703135445}
   sphereCollider: {fileID: 8257660890993480951}
   lineRenderer: {fileID: 8060309019646846267}
+  speed: 0
+  velocity: {x: 0, y: 0, z: 0}
 --- !u!1 &2829728833830955897
 GameObject:
   m_ObjectHideFlags: 0
@@ -176,7 +178,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &7303075435653964357
 Transform:
   m_ObjectHideFlags: 0
@@ -198,7 +200,7 @@ LineRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4409177306463532759}
-  m_Enabled: 1
+  m_Enabled: 0
   m_CastShadows: 0
   m_ReceiveShadows: 0
   m_DynamicOccludee: 1
@@ -239,7 +241,7 @@ LineRenderer:
   - {x: -2.5, y: 0, z: 10}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.3
+    widthMultiplier: 0.1
     widthCurve:
       serializedVersion: 2
       m_Curve:
