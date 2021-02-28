@@ -55,7 +55,7 @@ namespace Assets.Code.Gameplay
             CurrentVelocity += velocity;
         }
 
-        public void SetForceDirection(Vector3 direction)
+        public void DrawExtrapolatedLine(Vector3 direction)
         {
             if (drawLine)
             {
@@ -176,7 +176,7 @@ namespace Assets.Code.Gameplay
                     {
                         if (ball != this)
                         {
-                            ball.SetForceDirection(hitInfo.normal * -1);
+                            ball.DrawExtrapolatedLine(hitInfo.normal * -1);
                         }
 
                     }

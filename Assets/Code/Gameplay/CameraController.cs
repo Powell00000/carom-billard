@@ -50,9 +50,11 @@ namespace Assets.Code.Gameplay
 
             currentForceDirection = cam.transform.forward.WithY(0);
 
-            ball.SetForceDirection(currentForceDirection);
+            ball.DrawExtrapolatedLine(currentForceDirection);
+
             if (EventSystem.current.IsPointerOverGameObject())
                 return;
+
             if (Input.GetMouseButtonDown(0))
             {
                 savedForce = new SaveableStruct<Vector3>(currentForceDirection * 8);
