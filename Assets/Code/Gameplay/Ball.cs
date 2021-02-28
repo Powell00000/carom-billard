@@ -3,8 +3,11 @@ using UnityEngine;
 
 namespace Assets.Code.Gameplay
 {
-    public class Ball : MonoBehaviour
+    public class Ball : MonoBehaviour, IMoveable, IRevertable
     {
+        [Zenject.Inject]
+        private GameplayController gameplayCtrl;
+
         [SerializeField]
         private Rigidbody rgbd;
 
@@ -14,6 +17,8 @@ namespace Assets.Code.Gameplay
         private SaveableTransform savedTransform;
 
         private float radius;
+
+        public bool IsMoving => !rgbd.IsSleeping();
 
         private void Awake()
         {
@@ -32,15 +37,18 @@ namespace Assets.Code.Gameplay
 
         public void AddForce(Vector3 force)
         {
-            savedTransform = new SaveableTransform(transform);
             rgbd.AddForce(force, ForceMode.Impulse);
         }
 
-        [ContextMenu("Revert")]
-        private void Revert()
+        public void Revert()
         {
             transform.position = savedTransform.SavedValue.Position;
             transform.rotation = savedTransform.SavedValue.Rotation;
+        }
+
+        public void Store()
+        {
+            savedTransform = new SaveableTransform(transform);
         }
     }
 }
