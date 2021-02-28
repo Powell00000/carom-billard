@@ -1,13 +1,19 @@
 using Assets.Code.Saveable;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Assets.Code.Gameplay
 {
     public class Ball : MonoBehaviour, IMoveable, IRevertable
     {
+        public enum BallColor { White, Red, Yellow };
+
         [Zenject.Inject]
         private GameplayController gameplayCtrl;
         private static readonly uint maxPoints = 3;
+
+        [SerializeField]
+        BallColor color;
 
         [SerializeField]
         private Rigidbody rgbd;
@@ -26,11 +32,13 @@ namespace Assets.Code.Gameplay
         private Vector3 forceDirection;
         private Vector3[] hitPoints;
         private bool drawLine;
+        HashSet<BallColor> colorsHit;
+
+        int colorsCount;
 
         public float Speed => CurrentVelocity.magnitude;
         public Vector3 CurrentVelocity;
-
-        public bool IsMoving => CurrentVelocity.magnitude > 0;//!rgbd.IsSleeping();
+        public bool IsMoving => CurrentVelocity.magnitude > 0;
 
         private void Awake()
         {
@@ -40,7 +48,23 @@ namespace Assets.Code.Gameplay
         public virtual void Initialize()
         {
             hitPoints = new Vector3[maxPoints];
+            gameplayCtrl.OnStateChanged += StateChanged;
+            colorsHit = new HashSet<BallColor>();
+            colorsCount = System.Enum.GetValues(typeof(BallColor)).Length;
             CalculateRadius();
+        }
+
+        private void StateChanged(GameplayController.GameState state)
+        {
+            if (state == GameplayController.GameState.Playing)
+            {
+                if (colorsHit.Count == colorsCount - 1)
+                {
+                    gameplayCtrl.EndGame();
+                }
+                else
+                    colorsHit.Clear();
+            }
         }
 
         private void CalculateRadius()
@@ -69,7 +93,6 @@ namespace Assets.Code.Gameplay
 
         private void StickToTable()
         {
-
             if (Physics.Raycast(transform.position, Vector3.down, out var raycastHit, LayerMask.GetMask("Table")))
             {
                 transform.position = transform.position.WithY(raycastHit.point.y + radius);
@@ -89,6 +112,7 @@ namespace Assets.Code.Gameplay
                 {
                     if (otherBall != this)
                     {
+                        colorsHit.Add(otherBall.color);
                         var dot = Vector3.Dot(CurrentVelocity.normalized, hitInfo.normal);
                         var computedVelocity = CurrentVelocity * dot;
                         otherBall.AddVelocity(hitInfo.normal * -computedVelocity.magnitude);
@@ -117,24 +141,6 @@ namespace Assets.Code.Gameplay
             transform.position += CurrentVelocity * Time.deltaTime;
 
             speed = Speed;
-        }
-
-        private void FixedUpdate()
-        {
-            return;
-            Vector3 extrapolatedPositon = transform.position + rgbd.velocity * Time.fixedDeltaTime;
-            float distance = Vector3.Distance(transform.position, extrapolatedPositon);
-            bool hit = Physics.SphereCast(transform.position, radius, rgbd.velocity.normalized, out var hitInfo, distance, LayerMask.GetMask("Ball", "Band"));
-            if (hit)
-            {
-                if (hitInfo.rigidbody.TryGetComponent<Ball>(out var ball))
-                {
-                    if (ball != this)
-                    {
-                        ball.AddVelocity(hitInfo.normal + rgbd.velocity * rgbd.mass);
-                    }
-                }
-            }
         }
 
         private void LateUpdate()
@@ -192,12 +198,13 @@ namespace Assets.Code.Gameplay
             lineRenderer.SetPositions(hitPoints);
         }
 
+#if UNITY_EDITOR
         private void OnDrawGizmos()
         {
             Vector3 extrapolatedPositon = transform.position + CurrentVelocity * Time.fixedDeltaTime;
             float distance = Vector3.Distance(transform.position, extrapolatedPositon);
             Gizmos.DrawSphere(transform.position + CurrentVelocity.normalized * distance, radius);
         }
-
     }
+#endif
 }

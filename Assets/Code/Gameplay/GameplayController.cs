@@ -12,7 +12,8 @@ namespace Assets.Code.Gameplay
             Pause,
             Playing,
             Replay,
-            Waiting
+            Waiting,
+            GameEnded
         }
 
         private Ball[] balls;
@@ -24,21 +25,33 @@ namespace Assets.Code.Gameplay
 
         public System.Action OnGameStart;
         public System.Action OnGameEnd;
+        public System.Action<GameState> OnStateChanged;
 
         public GameState CurrentState => gameplayState.CurrentState;
 
         public void Initialize()
         {
             SceneManager.LoadScene("UI", LoadSceneMode.Additive);
-            gameplayState = new SimpleStateMachine<GameState>(GameState.None);
+            gameplayState = new SimpleStateMachine<GameState>(GameState.None, StateChanged);
             balls = FindObjectsOfType<Ball>();
             cameraCtrl.BallHit += StoreData;
             StartGame();
         }
 
+        void StateChanged(GameState currentState)
+        {
+            OnStateChanged?.Invoke(currentState);
+        }
+
         private void StartGame()
         {
             gameplayState.ChangeState(GameState.Playing);
+        }
+
+        public void EndGame()
+        {
+            OnGameEnd?.Invoke();
+            gameplayState.ChangeState(GameState.GameEnded);
         }
 
         [ContextMenu("Replay")]
@@ -73,7 +86,10 @@ namespace Assets.Code.Gameplay
 
         private void FixedUpdate()
         {
-            if (gameplayState.CurrentState == GameState.None || gameplayState.CurrentState == GameState.Pause)
+            if (gameplayState.CurrentState == GameState.None
+                || gameplayState.CurrentState == GameState.Pause
+                || gameplayState.CurrentState == GameState.GameEnded
+                )
             {
                 return;
             }

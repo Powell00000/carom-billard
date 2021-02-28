@@ -139,6 +139,10 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5616424933438649907, guid: 0a3cbd108a7298847a7c9d5314d8b706, type: 3}
+      propertyPath: color
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 5616424933438649907, guid: 0a3cbd108a7298847a7c9d5314d8b706, type: 3}
       propertyPath: drawLine
       value: 1
       objectReference: {fileID: 0}
@@ -700,6 +704,10 @@ PrefabInstance:
     - target: {fileID: 2150238058348289813, guid: 74c3241fc4aa622438943b4d6d039057, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3226770306117460289, guid: 74c3241fc4aa622438943b4d6d039057, type: 3}
+      propertyPath: color
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5075670852916343024, guid: 74c3241fc4aa622438943b4d6d039057, type: 3}
       propertyPath: m_IsActive
