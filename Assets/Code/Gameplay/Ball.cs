@@ -1,4 +1,4 @@
-using System.IO;
+using Assets.Code.Saveable;
 using UnityEngine;
 
 namespace Assets.Code.Gameplay
@@ -10,6 +10,8 @@ namespace Assets.Code.Gameplay
 
         [SerializeField]
         private string serializedTransform;
+
+        private SaveableTransform savedTransform;
 
         private float radius;
 
@@ -30,9 +32,15 @@ namespace Assets.Code.Gameplay
 
         public void AddForce(Vector3 force)
         {
-            var stream = new MemoryStream();
-            var writer = new BinaryWriter(stream);
+            savedTransform = new SaveableTransform(transform);
             rgbd.AddForce(force, ForceMode.Impulse);
+        }
+
+        [ContextMenu("Revert")]
+        private void Revert()
+        {
+            transform.position = savedTransform.SavedValue.Position;
+            transform.rotation = savedTransform.SavedValue.Rotation;
         }
     }
 }

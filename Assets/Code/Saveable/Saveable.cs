@@ -1,17 +1,16 @@
-﻿
-using UnityEngine;
-
-namespace Assets.Code.Saveable
+﻿namespace Assets.Code.Saveable
 {
     [System.Serializable]
-    public abstract class Saveable<T> : ISaveable where T : Component
+    public abstract class Saveable<T, W> : ISaveable where W : new()
     {
-        T parameter;
-        public T Parameter => parameter;
+        protected W savedValue;
+        public W SavedValue => savedValue;
 
-        public Saveable(T parameter)
+        public Saveable(T input)
         {
-            this.parameter = parameter;
+            Save(input);
         }
+
+        protected abstract void Save(T input);
     }
 }
