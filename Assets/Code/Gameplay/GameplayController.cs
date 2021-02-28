@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.SceneManagement;
 using Zenject;
 
 namespace Assets.Code.Gameplay
@@ -28,6 +29,7 @@ namespace Assets.Code.Gameplay
 
         public void Initialize()
         {
+            SceneManager.LoadScene("UI", LoadSceneMode.Additive);
             gameplayState = new SimpleStateMachine<GameState>(GameState.None);
             balls = FindObjectsOfType<Ball>();
             cameraCtrl.BallHit += StoreData;

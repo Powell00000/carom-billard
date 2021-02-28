@@ -148,6 +148,8 @@ namespace Assets.Code.Gameplay
 
         public void Revert()
         {
+            if (savedTransform == null)
+                return;
             transform.position = savedTransform.SavedValue.Position;
             transform.rotation = savedTransform.SavedValue.Rotation;
         }

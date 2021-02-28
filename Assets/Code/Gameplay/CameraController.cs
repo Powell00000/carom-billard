@@ -1,6 +1,7 @@
 using Assets.Code.Saveable;
 using Cinemachine;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace Assets.Code.Gameplay
 {
@@ -50,7 +51,8 @@ namespace Assets.Code.Gameplay
             currentForceDirection = cam.transform.forward.WithY(0);
 
             ball.SetForceDirection(currentForceDirection);
-
+            if (EventSystem.current.IsPointerOverGameObject())
+                return;
             if (Input.GetMouseButtonDown(0))
             {
                 savedForce = new SaveableStruct<Vector3>(currentForceDirection * 8);
@@ -61,6 +63,8 @@ namespace Assets.Code.Gameplay
 
         public void Revert()
         {
+            if (savedForce == null)
+                return;
             ball.AddVelocity(savedForce.SavedValue);
         }
 
