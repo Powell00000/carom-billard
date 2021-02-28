@@ -27,7 +27,7 @@ Transform:
   m_GameObject: {fileID: 402560233081603328}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.061, y: 0.061, z: 0.061}
+  m_LocalScale: {x: 0.305, y: 0.305, z: 0.305}
   m_Children:
   - {fileID: 6155935327254108623}
   m_Father: {fileID: 0}
@@ -42,8 +42,8 @@ Rigidbody:
   m_GameObject: {fileID: 402560233081603328}
   serializedVersion: 2
   m_Mass: 0.21
-  m_Drag: 0.5
-  m_AngularDrag: 0.05
+  m_Drag: 1
+  m_AngularDrag: 1
   m_UseGravity: 1
   m_IsKinematic: 0
   m_Interpolate: 1
@@ -62,6 +62,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   rgbd: {fileID: 83585928703135445}
+  serializedTransform: 
 --- !u!1 &2829728833830955897
 GameObject:
   m_ObjectHideFlags: 0

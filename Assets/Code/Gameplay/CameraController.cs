@@ -1,3 +1,5 @@
+using Cinemachine;
+using System;
 using UnityEngine;
 
 namespace Assets.Code.Gameplay
@@ -5,18 +7,37 @@ namespace Assets.Code.Gameplay
     public class CameraController : MonoBehaviour
     {
         [SerializeField]
-        Camera cam;
+        private Camera cam;
 
         [SerializeField]
-        Cinemachine.CinemachineFreeLook freeLook;
+        private CinemachineFreeLook freeLook;
 
         [SerializeField]
-        Ball ball;
+        private Ball ball;
+
+        private void Start()
+        {
+            CinemachineCore.GetInputAxis = GetAxisCustom;
+        }
+
+        private float GetAxisCustom(string axisName)
+        {
+            if (Input.GetMouseButton(1))
+            {
+                return Input.GetAxis(axisName);
+            }
+            else
+            {
+                return 0;
+            }
+        }
 
         private void Update()
         {
             if (Input.GetMouseButtonDown(0))
-                ball.AddForce(cam.transform.forward);
+            {
+                ball.AddForce(cam.transform.forward * 4);
+            }
         }
     }
 }

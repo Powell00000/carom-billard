@@ -6,10 +6,10 @@ namespace Assets.Code.Gameplay
     public class Ball : MonoBehaviour
     {
         [SerializeField]
-        Rigidbody rgbd;
+        private Rigidbody rgbd;
 
         [SerializeField]
-        string serializedTransform;
+        private string serializedTransform;
 
         private float radius;
 
@@ -33,12 +33,6 @@ namespace Assets.Code.Gameplay
             var stream = new MemoryStream();
             var writer = new BinaryWriter(stream);
             rgbd.AddForce(force, ForceMode.Impulse);
-        }
-
-        [ContextMenu("Push")]
-        private void Push()
-        {
-            AddForce(Vector3.forward);
         }
     }
 }
