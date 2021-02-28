@@ -80,7 +80,7 @@ namespace Assets.Code.Gameplay
         {
             StickToTable();
 
-            Vector3 extrapolatedPositon = transform.position + CurrentVelocity * Time.fixedDeltaTime;
+            Vector3 extrapolatedPositon = transform.position + CurrentVelocity * Time.deltaTime;
             float distance = Vector3.Distance(transform.position, extrapolatedPositon);
             bool hit = Physics.SphereCast(transform.position, radius, CurrentVelocity.normalized, out var hitInfo, distance, LayerMask.GetMask("Ball", "Band"));
             if (hit)
