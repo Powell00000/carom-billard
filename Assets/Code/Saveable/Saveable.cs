@@ -1,6 +1,5 @@
 ﻿namespace Assets.Code.Saveable
 {
-    [System.Serializable]
     public abstract class Saveable<T, W> : ISaveable where W : new()
     {
         protected W savedValue;
@@ -12,5 +11,18 @@
         }
 
         protected abstract void Save(T input);
+    }
+
+    public class SaveableStruct<T> : Saveable<T, T> where T : struct
+    {
+        public SaveableStruct(T input) : base(input)
+        {
+
+        }
+
+        protected override void Save(T input)
+        {
+            savedValue = input;
+        }
     }
 }

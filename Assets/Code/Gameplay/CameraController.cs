@@ -1,11 +1,14 @@
+using Assets.Code.Saveable;
 using Cinemachine;
-using System;
 using UnityEngine;
 
 namespace Assets.Code.Gameplay
 {
-    public class CameraController : MonoBehaviour
+    public class CameraController : MonoBehaviour, IRevertable
     {
+        [Zenject.Inject]
+        private GameplayController gameplayCtrl;
+
         [SerializeField]
         private Camera cam;
 
@@ -14,6 +17,10 @@ namespace Assets.Code.Gameplay
 
         [SerializeField]
         private Ball ball;
+
+        private SaveableStruct<Vector3> savedForce;
+
+        public System.Action BallHit;
 
         private void Start()
         {
@@ -34,10 +41,27 @@ namespace Assets.Code.Gameplay
 
         private void Update()
         {
+            if (gameplayCtrl.CurrentState != GameplayController.GameState.Playing)
+            {
+                return;
+            }
+
             if (Input.GetMouseButtonDown(0))
             {
-                ball.AddForce(cam.transform.forward * 4);
+                savedForce = new SaveableStruct<Vector3>(cam.transform.forward * 4);
+                BallHit?.Invoke();
+                ball.AddForce(savedForce.SavedValue);
             }
+        }
+
+        public void Revert()
+        {
+            ball.AddForce(savedForce.SavedValue);
+        }
+
+        public void Store()
+        {
+            //nothing
         }
     }
 }
