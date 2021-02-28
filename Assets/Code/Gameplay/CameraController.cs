@@ -19,6 +19,7 @@ namespace Assets.Code.Gameplay
         private Ball ball;
 
         private SaveableStruct<Vector3> savedForce;
+        private Vector3 currentForceDirection;
 
         public System.Action BallHit;
 
@@ -46,9 +47,13 @@ namespace Assets.Code.Gameplay
                 return;
             }
 
+            currentForceDirection = cam.transform.forward.WithY(0);
+
+            ball.SetForceDirection(currentForceDirection);
+
             if (Input.GetMouseButtonDown(0))
             {
-                savedForce = new SaveableStruct<Vector3>(cam.transform.forward * 4);
+                savedForce = new SaveableStruct<Vector3>(currentForceDirection * 4);
                 BallHit?.Invoke();
                 ball.AddForce(savedForce.SavedValue);
             }
