@@ -1,44 +1,23 @@
-using Assets.Code.Saveable;
 using Cinemachine;
 using UnityEngine;
-using UnityEngine.EventSystems;
 
 namespace Assets.Code.Gameplay
 {
-    public class CameraController : MonoBehaviour, IRevertable
+    public class CameraController : MonoBehaviour
     {
-        [Zenject.Inject]
-        private GameplayController gameplayCtrl;
+        [Zenject.Inject] private GameplayController gameplayCtrl;
+        [Zenject.Inject] private InputController inputCtrl;
 
-        [SerializeField]
-        private Camera cam;
+        [SerializeField] private Camera cam;
+        [SerializeField] private CinemachineFreeLook freeLook;
 
-        [SerializeField]
-        private CinemachineFreeLook freeLook;
+        private Vector3 lookDirection;
 
-        [SerializeField]
-        private Ball ball;
-
-        private SaveableStruct<Vector3> savedForce;
-        private Vector3 currentForceDirection;
-
-        public System.Action BallHit;
+        public Vector3 LookDirection => lookDirection;
 
         private void Start()
         {
-            CinemachineCore.GetInputAxis = GetAxisCustom;
-        }
-
-        private float GetAxisCustom(string axisName)
-        {
-            if (Input.GetMouseButton(1))
-            {
-                return Input.GetAxis(axisName);
-            }
-            else
-            {
-                return 0;
-            }
+            CinemachineCore.GetInputAxis = inputCtrl.GetAxisCustom;
         }
 
         private void Update()
@@ -48,31 +27,7 @@ namespace Assets.Code.Gameplay
                 return;
             }
 
-            currentForceDirection = cam.transform.forward.WithY(0);
-
-            ball.DrawExtrapolatedLine(currentForceDirection);
-
-            if (EventSystem.current.IsPointerOverGameObject())
-                return;
-
-            if (Input.GetMouseButtonDown(0))
-            {
-                savedForce = new SaveableStruct<Vector3>(currentForceDirection * 8);
-                BallHit?.Invoke();
-                ball.AddVelocity(savedForce.SavedValue);
-            }
-        }
-
-        public void Revert()
-        {
-            if (savedForce == null)
-                return;
-            ball.AddVelocity(savedForce.SavedValue);
-        }
-
-        public void Store()
-        {
-            //nothing
+            lookDirection = cam.transform.forward.WithY(0);
         }
     }
 }

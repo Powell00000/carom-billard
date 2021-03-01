@@ -16,17 +16,14 @@ namespace Assets.Code.Gameplay
             GameEnded
         }
 
+        [Inject] private HitBallController hitBallCtrl;
+
         private Ball[] balls;
-
-        [SerializeField]
-        private CameraController cameraCtrl;
-
         private SimpleStateMachine<GameState> gameplayState;
 
         public System.Action OnGameStart;
         public System.Action OnGameEnd;
         public System.Action<GameState> OnStateChanged;
-
         public GameState CurrentState => gameplayState.CurrentState;
 
         public void Initialize()
@@ -34,11 +31,11 @@ namespace Assets.Code.Gameplay
             SceneManager.LoadScene("UI", LoadSceneMode.Additive);
             gameplayState = new SimpleStateMachine<GameState>(GameState.None, StateChanged);
             balls = FindObjectsOfType<Ball>();
-            cameraCtrl.BallHit += StoreData;
+            hitBallCtrl.BallHit += StoreData;
             StartGame();
         }
 
-        void StateChanged(GameState currentState)
+        private void StateChanged(GameState currentState)
         {
             OnStateChanged?.Invoke(currentState);
         }
@@ -68,7 +65,7 @@ namespace Assets.Code.Gameplay
                 balls[i].Revert();
             }
 
-            cameraCtrl.Revert();
+            hitBallCtrl.Revert();
         }
 
         private void StoreData()
@@ -84,7 +81,7 @@ namespace Assets.Code.Gameplay
             }
         }
 
-        private void FixedUpdate()
+        private void Update()
         {
             if (gameplayState.CurrentState == GameState.None
                 || gameplayState.CurrentState == GameState.Pause
@@ -94,6 +91,11 @@ namespace Assets.Code.Gameplay
                 return;
             }
 
+            CheckIfAnyMoving();
+        }
+
+        private void CheckIfAnyMoving()
+        {
             bool anyMoving = false;
             for (int i = 0; i < balls.Length; i++)
             {
