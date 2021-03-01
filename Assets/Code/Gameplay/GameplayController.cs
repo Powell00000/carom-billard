@@ -23,11 +23,13 @@ namespace Assets.Code.Gameplay
 
         public System.Action OnGameStart;
         public System.Action OnGameEnd;
+        public System.Action OnAllStopped;
         public System.Action<GameState> OnStateChanged;
         public GameState CurrentState => gameplayState.CurrentState;
 
         public void Initialize()
         {
+            Application.targetFrameRate = 60;
             SceneManager.LoadScene("UI", LoadSceneMode.Additive);
             gameplayState = new SimpleStateMachine<GameState>(GameState.None, StateChanged);
             balls = FindObjectsOfType<Ball>();
@@ -38,6 +40,28 @@ namespace Assets.Code.Gameplay
         private void StateChanged(GameState currentState)
         {
             OnStateChanged?.Invoke(currentState);
+            switch (currentState)
+            {
+                case GameState.None:
+                    break;
+                case GameState.Pause:
+                    break;
+                case GameState.Playing:
+                    break;
+                case GameState.Replay:
+                    break;
+                case GameState.Waiting:
+                    break;
+                case GameState.GameEnded:
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        private void CalculatePoints()
+        {
+
         }
 
         private void StartGame()
@@ -123,6 +147,11 @@ namespace Assets.Code.Gameplay
             }
             else
             {
+                if (CurrentState == GameplayController.GameState.Waiting)
+                {
+                    OnAllStopped?.Invoke();
+                }
+
                 gameplayState.ChangeState(GameState.Playing);
             }
         }
