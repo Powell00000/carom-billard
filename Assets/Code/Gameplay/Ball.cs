@@ -13,7 +13,7 @@ namespace Assets.Code.Gameplay
         private static readonly uint maxPoints = 3;
 
         [SerializeField]
-        BallColor color;
+        private BallColor color;
 
         [SerializeField]
         private Rigidbody rgbd;
@@ -24,17 +24,13 @@ namespace Assets.Code.Gameplay
         [SerializeField]
         private LineRenderer lineRenderer;
 
-        [SerializeField]
-        private float speed;
-
         private SaveableTransform savedTransform;
         private float radius;
         private Vector3 forceDirection;
         private Vector3[] hitPoints;
         private bool drawLine;
-        HashSet<BallColor> colorsHit;
-
-        int colorsCount;
+        private HashSet<BallColor> colorsHit;
+        private int colorsCount;
 
         public float Speed => CurrentVelocity.magnitude;
         public Vector3 CurrentVelocity;
@@ -48,13 +44,18 @@ namespace Assets.Code.Gameplay
         public virtual void Initialize()
         {
             hitPoints = new Vector3[maxPoints];
-            gameplayCtrl.OnStateChanged += StateChanged;
+            gameplayCtrl.OnStateChanged += GameplayStateChanged;
             colorsHit = new HashSet<BallColor>();
             colorsCount = System.Enum.GetValues(typeof(BallColor)).Length;
             CalculateRadius();
         }
 
-        private void StateChanged(GameplayController.GameState state)
+        private void OnDestroy()
+        {
+            gameplayCtrl.OnStateChanged -= GameplayStateChanged;
+        }
+
+        private void GameplayStateChanged(GameplayController.GameState state)
         {
             if (state == GameplayController.GameState.Playing)
             {
@@ -63,7 +64,9 @@ namespace Assets.Code.Gameplay
                     gameplayCtrl.EndGame();
                 }
                 else
+                {
                     colorsHit.Clear();
+                }
             }
         }
 
@@ -74,8 +77,6 @@ namespace Assets.Code.Gameplay
 
         public void AddVelocity(Vector3 velocity)
         {
-            Debug.Log($"{name} added {velocity} velocity");
-            //rgbd.AddForce(velocity, ForceMode.Impulse);
             CurrentVelocity += velocity;
         }
 
@@ -102,7 +103,13 @@ namespace Assets.Code.Gameplay
         private void Update()
         {
             StickToTable();
+            CastForObjects();
+            CalculateSpeed();
+            ApplyVelocityToTransform();
+        }
 
+        private void CastForObjects()
+        {
             Vector3 extrapolatedPositon = transform.position + CurrentVelocity * Time.deltaTime;
             float distance = Vector3.Distance(transform.position, extrapolatedPositon);
             bool hit = Physics.SphereCast(transform.position, radius, CurrentVelocity.normalized, out var hitInfo, distance, LayerMask.GetMask("Ball", "Band"));
@@ -124,7 +131,10 @@ namespace Assets.Code.Gameplay
                     CurrentVelocity = Vector3.Reflect(CurrentVelocity, hitInfo.normal);
                 }
             }
+        }
 
+        private void CalculateSpeed()
+        {
             if (Speed > 0)
             {
                 var nextVelocity = CurrentVelocity + CurrentVelocity.normalized * -1 * Time.deltaTime;
@@ -137,10 +147,11 @@ namespace Assets.Code.Gameplay
                     CurrentVelocity = Vector3.zero;
                 }
             }
+        }
 
+        private void ApplyVelocityToTransform()
+        {
             transform.position += CurrentVelocity * Time.deltaTime;
-
-            speed = Speed;
         }
 
         private void LateUpdate()
@@ -155,7 +166,10 @@ namespace Assets.Code.Gameplay
         public void Revert()
         {
             if (savedTransform == null)
+            {
                 return;
+            }
+
             transform.position = savedTransform.SavedValue.Position;
             transform.rotation = savedTransform.SavedValue.Rotation;
         }
