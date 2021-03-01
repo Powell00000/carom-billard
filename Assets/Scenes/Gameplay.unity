@@ -536,6 +536,50 @@ Transform:
   m_Father: {fileID: 1521132198}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &869002754
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 869002756}
+  - component: {fileID: 869002755}
+  m_Layer: 0
+  m_Name: HitBallController
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &869002755
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 869002754}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c03a09eebd2f15f40b7cdf36a92e1bee, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playingBall: {fileID: 1994330477}
+--- !u!4 &869002756
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 869002754}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 2119739636}
+  m_RootOrder: 2
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &963194225
 GameObject:
   m_ObjectHideFlags: 0
@@ -748,7 +792,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 120d577868592c0469d806f450a56d64, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cameraCtrl: {fileID: 1565306796}
 --- !u!4 &1023239526
 Transform:
   m_ObjectHideFlags: 0
@@ -1060,8 +1103,8 @@ MonoBehaviour:
   m_BindingMode: 4
   m_SplineCurvature: 0.2
   m_Orbits:
-  - m_Height: 4.5
-    m_Radius: 2
+  - m_Height: 10
+    m_Radius: 20
   - m_Height: 2.5
     m_Radius: 7
   - m_Height: 0.4
@@ -1119,7 +1162,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cam: {fileID: 963194227}
   freeLook: {fileID: 1521132197}
-  ball: {fileID: 1994330477}
 --- !u!4 &1565306797
 Transform:
   m_ObjectHideFlags: 0
@@ -1361,6 +1403,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   gameplayCtrl: {fileID: 1023239525}
+  cameraCtrl: {fileID: 1565306796}
+  hitBallCtrl: {fileID: 869002755}
 --- !u!114 &2119739635
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1407,6 +1451,7 @@ Transform:
   m_Children:
   - {fileID: 1023239526}
   - {fileID: 1565306797}
+  - {fileID: 869002756}
   m_Father: {fileID: 0}
   m_RootOrder: 7
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
