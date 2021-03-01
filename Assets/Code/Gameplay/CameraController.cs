@@ -1,6 +1,7 @@
 using Assets.Code.Saveable;
 using Cinemachine;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace Assets.Code.Gameplay
 {
@@ -19,6 +20,7 @@ namespace Assets.Code.Gameplay
         private Ball ball;
 
         private SaveableStruct<Vector3> savedForce;
+        private Vector3 currentForceDirection;
 
         public System.Action BallHit;
 
@@ -46,17 +48,26 @@ namespace Assets.Code.Gameplay
                 return;
             }
 
+            currentForceDirection = cam.transform.forward.WithY(0);
+
+            ball.DrawExtrapolatedLine(currentForceDirection);
+
+            if (EventSystem.current.IsPointerOverGameObject())
+                return;
+
             if (Input.GetMouseButtonDown(0))
             {
-                savedForce = new SaveableStruct<Vector3>(cam.transform.forward * 4);
+                savedForce = new SaveableStruct<Vector3>(currentForceDirection * 8);
                 BallHit?.Invoke();
-                ball.AddForce(savedForce.SavedValue);
+                ball.AddVelocity(savedForce.SavedValue);
             }
         }
 
         public void Revert()
         {
-            ball.AddForce(savedForce.SavedValue);
+            if (savedForce == null)
+                return;
+            ball.AddVelocity(savedForce.SavedValue);
         }
 
         public void Store()
