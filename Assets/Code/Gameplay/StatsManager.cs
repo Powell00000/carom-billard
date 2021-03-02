@@ -6,6 +6,7 @@ namespace Assets.Code.Gameplay
 {
     public class StatsManager : IInitializable
     {
+        [System.Serializable]
         public struct Stats
         {
             public int Score;

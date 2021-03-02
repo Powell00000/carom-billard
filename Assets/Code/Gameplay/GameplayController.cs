@@ -17,6 +17,7 @@ namespace Assets.Code.Gameplay
             GameEnded
         }
 
+        [Inject] private PointsManager pointsManager;
         [Inject] private HitBallController hitBallCtrl;
         [Inject] private StatsManager statsManager;
 
@@ -46,6 +47,14 @@ namespace Assets.Code.Gameplay
             balls = FindObjectsOfType<Ball>();
             hitBallCtrl.BallHit += BallHit;
             StartGame();
+        }
+
+        private void CheckEndGame()
+        {
+            if (pointsManager.CurrentPoints == 3)
+            {
+                EndGame();
+            }
         }
 
         private void StateChanged(GameState currentState)
@@ -81,6 +90,7 @@ namespace Assets.Code.Gameplay
             statsManager.SetTimeSpent(TimeSpan.FromSeconds(gameplayTime));
             gameplayState.ChangeState(GameState.GameEnded);
             OnGameEnd?.Invoke();
+            statsManager.SaveStats();
         }
 
         private void FixedUpdate()
@@ -195,6 +205,7 @@ namespace Assets.Code.Gameplay
                 OnAllStopped?.Invoke();
                 gameplayState.ChangeState(GameState.Playing);
                 checkMovement = false;
+                CheckEndGame();
             }
         }
     }
