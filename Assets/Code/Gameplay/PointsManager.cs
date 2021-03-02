@@ -25,9 +25,14 @@ namespace Assets.Code.Gameplay
 
         public void Initialize()
         {
-            SetPoints(0);
-            gameplayCtrl.OnGameStart += () => SetPoints(0);
+            gameplayCtrl.OnGameStart += Init;
             gameplayCtrl.OnGameEnd += OnGameEnd;
+            Init();
+        }
+
+        private void Init()
+        {
+            SetPoints(0);
         }
 
         private void OnGameEnd()

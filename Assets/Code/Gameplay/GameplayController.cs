@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Zenject;
@@ -21,12 +22,14 @@ namespace Assets.Code.Gameplay
         [Inject] private HitBallController hitBallCtrl;
         [Inject] private StatsManager statsManager;
 
+        private Dictionary<Ball, Vector3> storedInitialPositions;
         private Ball[] balls;
         private SimpleStateMachine<GameState> gameplayState;
 
         private bool checkMovement = false;
 
         private float gameplayTime;
+        private TimeSpan gameplayTimeSpan;
 
         private bool ShouldUpdateBalls =>
             CurrentState == GameState.Playing
@@ -38,20 +41,30 @@ namespace Assets.Code.Gameplay
         public Action OnAllStopped;
         public Action<GameState> OnStateChanged;
         public GameState CurrentState => gameplayState.CurrentState;
+        public TimeSpan GameplayTimeSpan => gameplayTimeSpan;
 
         public void Initialize()
         {
             Application.targetFrameRate = 60;
             SceneManager.LoadScene("UI", LoadSceneMode.Additive);
             gameplayState = new SimpleStateMachine<GameState>(GameState.None, StateChanged);
+            Init();
+        }
+
+        private void Init()
+        {
             balls = FindObjectsOfType<Ball>();
+            for (int i = 0; i < balls.Length; i++)
+            {
+                balls[i].Initialize();
+            }
             hitBallCtrl.BallHit += BallHit;
             StartGame();
         }
 
         private void CheckEndGame()
         {
-            if (pointsManager.CurrentPoints == 3)
+            if (pointsManager.CurrentPoints == 1)
             {
                 EndGame();
             }
@@ -81,16 +94,22 @@ namespace Assets.Code.Gameplay
 
         private void StartGame()
         {
+            OnGameStart?.Invoke();
             gameplayState.ChangeState(GameState.Playing);
             gameplayTime = 0;
         }
 
-        public void EndGame()
+        public void Restart()
         {
-            statsManager.SetTimeSpent(TimeSpan.FromSeconds(gameplayTime));
-            gameplayState.ChangeState(GameState.GameEnded);
+            Init();
+        }
+
+        private void EndGame()
+        {
+            statsManager.SetTimeSpent(gameplayTimeSpan);
             OnGameEnd?.Invoke();
             statsManager.SaveStats();
+            gameplayState.ChangeState(GameState.GameEnded);
         }
 
         private void FixedUpdate()
@@ -111,6 +130,7 @@ namespace Assets.Code.Gameplay
             if (CurrentState == GameState.Playing)
             {
                 gameplayTime += Time.deltaTime;
+                gameplayTimeSpan = TimeSpan.FromSeconds(gameplayTime);
             }
         }
 
