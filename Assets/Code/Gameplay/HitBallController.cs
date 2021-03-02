@@ -11,6 +11,7 @@ namespace Assets.Code.Gameplay
         [Inject] private CameraController cameraCtrl;
         [Inject] private InputController inputCtrl;
         [Inject] private PointsManager pointsManager;
+        [Inject] private StatsManager statsManager;
 
         [SerializeField] private MainBall playingBall;
 
@@ -22,6 +23,7 @@ namespace Assets.Code.Gameplay
 
         private float currentForce = 0;
         private const float maxForce = 40f;
+        private int shotsMade;
 
         public void Initialize()
         {
@@ -29,6 +31,13 @@ namespace Assets.Code.Gameplay
             inputCtrl.OnLeftButtonReleased += OnLeftButtonReleased;
             inputCtrl.OnLeftButtonHold += IncrementForce;
             gameplayCtrl.OnAllStopped += CheckColorsHit;
+            gameplayCtrl.OnGameEnd += OnGameEnd;
+            shotsMade = 0;
+        }
+
+        private void OnGameEnd()
+        {
+            statsManager.SetShotsMade(shotsMade);
         }
 
         private void IncrementForce()
@@ -87,6 +96,7 @@ namespace Assets.Code.Gameplay
         {
             savedForce = new SaveableStruct<Vector3>(cameraCtrl.LookDirection * currentForce);
             HitBall();
+            shotsMade++;
         }
 
         private void HitBall()
@@ -98,7 +108,10 @@ namespace Assets.Code.Gameplay
 
         public void Dispose()
         {
-            inputCtrl.OnLeftButtonReleased -= HitBall;
+            inputCtrl.OnLeftButtonReleased -= OnLeftButtonReleased;
+            inputCtrl.OnLeftButtonHold -= IncrementForce;
+            gameplayCtrl.OnAllStopped -= CheckColorsHit;
+            gameplayCtrl.OnGameEnd -= OnGameEnd;
         }
     }
 }

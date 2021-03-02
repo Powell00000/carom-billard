@@ -5,6 +5,7 @@ namespace Assets.Code.Gameplay
     internal class PointsManager : IInitializable
     {
         [Inject] private GameplayController gameplayCtrl;
+        [Inject] private StatsManager statsManager;
 
         private int currentPoints;
 
@@ -26,6 +27,12 @@ namespace Assets.Code.Gameplay
         {
             SetPoints(0);
             gameplayCtrl.OnGameStart += () => SetPoints(0);
+            gameplayCtrl.OnGameEnd += OnGameEnd;
+        }
+
+        private void OnGameEnd()
+        {
+            statsManager.SetScore(currentPoints);
         }
     }
 }
