@@ -10,16 +10,52 @@ namespace Assets.Code.Gameplay
         [Inject] private GameplayController gameplayCtrl;
         [Inject] private CameraController cameraCtrl;
         [Inject] private InputController inputCtrl;
+        [Inject] private PointsManager pointsManager;
 
-        [SerializeField] private Ball playingBall;
+        [SerializeField] private MainBall playingBall;
 
         private SaveableStruct<Vector3> savedForce;
+        private int colorsCount;
 
         public Action BallHit;
+        public Action<float, float> ForceChanged;
+
+        private float currentForce = 0;
+        private const float maxForce = 40f;
 
         public void Initialize()
         {
-            inputCtrl.OnLeftButtonClick += HitBall;
+            colorsCount = Enum.GetValues(typeof(Ball.BallColor)).Length;
+            inputCtrl.OnLeftButtonReleased += OnLeftButtonReleased;
+            inputCtrl.OnLeftButtonHold += IncrementForce;
+            gameplayCtrl.OnAllStopped += CheckColorsHit;
+        }
+
+        private void IncrementForce()
+        {
+            currentForce += Time.deltaTime * maxForce;
+            SetForce(currentForce);
+        }
+
+        private void SetForce(float current)
+        {
+            currentForce = Mathf.Clamp(current, 0, maxForce);
+            ForceChanged?.Invoke(currentForce, maxForce);
+        }
+
+        private void CheckColorsHit()
+        {
+            if (gameplayCtrl.CurrentState != GameplayController.GameState.Waiting)
+            {
+                return;
+            }
+
+            if (playingBall.ColorsHitCount == colorsCount - 1)
+            {
+                //all other colors hit
+                pointsManager.AddPoints(1);
+            }
+            playingBall.ClearHits();
         }
 
         public void Revert()
@@ -29,7 +65,7 @@ namespace Assets.Code.Gameplay
                 return;
             }
 
-            playingBall.AddVelocity(savedForce.SavedValue);
+            HitBall();
         }
 
         public void Store()
@@ -47,16 +83,22 @@ namespace Assets.Code.Gameplay
             playingBall.DrawExtrapolatedLine(cameraCtrl.LookDirection);
         }
 
+        private void OnLeftButtonReleased()
+        {
+            savedForce = new SaveableStruct<Vector3>(cameraCtrl.LookDirection * currentForce);
+            HitBall();
+        }
+
         private void HitBall()
         {
-            savedForce = new SaveableStruct<Vector3>(cameraCtrl.LookDirection * 8);
-            BallHit?.Invoke();
             playingBall.AddVelocity(savedForce.SavedValue);
+            SetForce(0);
+            BallHit?.Invoke();
         }
 
         public void Dispose()
         {
-            inputCtrl.OnLeftButtonClick -= HitBall;
+            inputCtrl.OnLeftButtonReleased -= HitBall;
         }
     }
 }

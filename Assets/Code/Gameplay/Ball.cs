@@ -8,33 +8,33 @@ namespace Assets.Code.Gameplay
     {
         public enum BallColor { White, Red, Yellow };
 
-        [Zenject.Inject]
-        private GameplayController gameplayCtrl;
-        private static readonly uint maxPoints = 3;
-
         [SerializeField]
-        private BallColor color;
+        internal BallColor color;
 
         [SerializeField]
         private Rigidbody rgbd;
 
         [SerializeField]
-        private SphereCollider sphereCollider;
+        private SphereCollider additionalSphereCollider;
 
         [SerializeField]
         private LineRenderer lineRenderer;
+        private Vector3 lastPositionDelta;
 
         private SaveableTransform savedTransform;
         private float radius;
         private Vector3 forceDirection;
         private Vector3[] hitPoints;
         private bool drawLine;
-        private HashSet<BallColor> colorsHit;
-        private int colorsCount;
+        private RaycastHit[] hitInfos;
+        private HashSet<Rigidbody> rigidbodiesHit;
+        private Collider[] overlapingColliders;
+
+        private static readonly short maxLinePoints = 3;
 
         public float Speed => CurrentVelocity.magnitude;
         public Vector3 CurrentVelocity;
-        public bool IsMoving => CurrentVelocity.magnitude > 0;
+        public bool IsMoving => Speed > 0;
 
         private void Awake()
         {
@@ -43,31 +43,11 @@ namespace Assets.Code.Gameplay
 
         public virtual void Initialize()
         {
-            hitPoints = new Vector3[maxPoints];
-            gameplayCtrl.OnStateChanged += GameplayStateChanged;
-            colorsHit = new HashSet<BallColor>();
-            colorsCount = System.Enum.GetValues(typeof(BallColor)).Length;
+            hitPoints = new Vector3[maxLinePoints];
+            overlapingColliders = new Collider[5];
+            hitInfos = new RaycastHit[5];
+            rigidbodiesHit = new HashSet<Rigidbody>();
             CalculateRadius();
-        }
-
-        private void OnDestroy()
-        {
-            gameplayCtrl.OnStateChanged -= GameplayStateChanged;
-        }
-
-        private void GameplayStateChanged(GameplayController.GameState state)
-        {
-            if (state == GameplayController.GameState.Playing)
-            {
-                if (colorsHit.Count == colorsCount - 1)
-                {
-                    gameplayCtrl.EndGame();
-                }
-                else
-                {
-                    colorsHit.Clear();
-                }
-            }
         }
 
         private void CalculateRadius()
@@ -77,7 +57,31 @@ namespace Assets.Code.Gameplay
 
         public void AddVelocity(Vector3 velocity)
         {
+            var energyLoss = CurrentVelocity.normalized * rgbd.mass;
+            if (energyLoss.magnitude >= velocity.magnitude)
+            {
+                return;
+            }
+
+            velocity -= energyLoss;
+            Debug.Log($"{name} added velocity {velocity}");
             CurrentVelocity += velocity;
+        }
+
+        private void ReflectVelocityWithLoss(Vector3 reflectionNormal)
+        {
+            var energyLoss = CurrentVelocity.normalized * rgbd.mass;
+            if (energyLoss.magnitude >= CurrentVelocity.magnitude)
+            {
+                CurrentVelocity = Vector3.zero;
+                return;
+            }
+            else
+            {
+                CurrentVelocity -= energyLoss;
+            }
+
+            CurrentVelocity = Vector3.Reflect(CurrentVelocity, reflectionNormal);
         }
 
         public void DrawExtrapolatedLine(Vector3 direction)
@@ -100,44 +104,111 @@ namespace Assets.Code.Gameplay
             }
         }
 
-        private void Update()
+        public void CustomUpdate()
         {
             StickToTable();
-            CastForObjects();
+            if (IsMoving)
+            {
+                CastForOverlap();
+                CastForObjects();
+            }
             CalculateSpeed();
+
             ApplyVelocityToTransform();
+        }
+
+        private void OnCollisionEnter(Collision collision)
+        {
+            return;
+            if (collision.rigidbody.TryGetComponent<Ball>(out var otherBall))
+            {
+                OtherBallHit(ref otherBall);
+            }
+        }
+
+        private void CastForOverlap()
+        {
+            return;
+            int hits = Physics.OverlapSphereNonAlloc(transform.position, radius, overlapingColliders, LayerMask.GetMask("Ball", "Band"));
+            for (int i = 0; i < hits; i++)
+            {
+                var collider = overlapingColliders[i];
+                if (collider.attachedRigidbody == rgbd)
+                {
+                    continue;
+                }
+
+                //move back position by one frame
+                var previousPosition = transform.position - lastPositionDelta;
+                //calculate closest point on collider
+                var closestPoint = collider.ClosestPoint(previousPosition);
+                var surfaceNormal = (transform.position - closestPoint).normalized;
+
+                var dot = Vector3.Dot(CurrentVelocity.normalized, surfaceNormal);
+                float penetrationDepth = Vector3.Distance(closestPoint, transform.position);
+                penetrationDepth += Mathf.Sign(dot) * radius;
+
+                transform.position -= CurrentVelocity.normalized * penetrationDepth;
+            }
         }
 
         private void CastForObjects()
         {
-            Vector3 extrapolatedPositon = transform.position + CurrentVelocity * Time.deltaTime;
+            Vector3 extrapolatedPositon = transform.position + ApplyTimeScale(ApplyDrag(CurrentVelocity));
+            //additionalSphereCollider.transform.position = extrapolatedPositon;
             float distance = Vector3.Distance(transform.position, extrapolatedPositon);
-            bool hit = Physics.SphereCast(transform.position, radius, CurrentVelocity.normalized, out var hitInfo, distance, LayerMask.GetMask("Ball", "Band"));
-            if (hit)
+            distance = Round(distance);
+            int hits = Physics.SphereCastNonAlloc(transform.position, radius, CurrentVelocity.normalized, hitInfos, distance, LayerMask.GetMask("Ball", "Band"));
+            for (int i = 0; i < hits; i++)
             {
+                var hitInfo = hitInfos[i];
+
+                if (hitInfo.rigidbody == rgbd)
+                {
+                    continue;
+                }
+
+                if (rigidbodiesHit.Contains(hitInfo.rigidbody))
+                {
+                    continue;
+                }
+
+                rigidbodiesHit.Add(hitInfo.rigidbody);
+
                 if (hitInfo.rigidbody.TryGetComponent<Ball>(out var otherBall))
                 {
-                    if (otherBall != this)
-                    {
-                        colorsHit.Add(otherBall.color);
-                        var dot = Vector3.Dot(CurrentVelocity.normalized, hitInfo.normal);
-                        var computedVelocity = CurrentVelocity * dot;
-                        otherBall.AddVelocity(hitInfo.normal * -computedVelocity.magnitude);
-                        CurrentVelocity = Vector3.Reflect(CurrentVelocity, hitInfo.normal);
-                    }
+                    OtherBallHit(ref otherBall);
+                    var otherVelocity = otherBall.CurrentVelocity;
+                    var thisVelocity = CurrentVelocity;
+
+                    var velocitySum = otherVelocity + thisVelocity;
+
+                    var dot = Vector3.Dot(CurrentVelocity.normalized, hitInfo.normal);
+                    dot = Round(dot);
+                    var computedVelocity = CurrentVelocity * dot;
+                    otherBall.AddVelocity(hitInfo.normal * -computedVelocity.magnitude);
                 }
-                else
-                {
-                    CurrentVelocity = Vector3.Reflect(CurrentVelocity, hitInfo.normal);
-                }
+                Debug.Log($"{name} hit {hitInfo.rigidbody.gameObject.name}");
+                ReflectVelocityWithLoss(hitInfo.normal);
             }
+
+            rigidbodiesHit.Clear();
+        }
+
+        private float Round(float value)
+        {
+            return value;//Mathf.Round(value * 10000f) / 10000f;
+        }
+
+        protected virtual void OtherBallHit(ref Ball otherBall)
+        {
         }
 
         private void CalculateSpeed()
         {
             if (Speed > 0)
             {
-                var nextVelocity = CurrentVelocity + CurrentVelocity.normalized * -1 * Time.deltaTime;
+                var nextVelocity = ApplyDrag(CurrentVelocity);
                 if (Vector3.Dot(CurrentVelocity, nextVelocity) > 0)
                 {
                     CurrentVelocity = nextVelocity;
@@ -149,12 +220,23 @@ namespace Assets.Code.Gameplay
             }
         }
 
-        private void ApplyVelocityToTransform()
+        private Vector3 ApplyDrag(Vector3 velocity)
         {
-            transform.position += CurrentVelocity * Time.deltaTime;
+            return velocity + velocity.normalized * -1 * Round(Time.fixedDeltaTime);
         }
 
-        private void LateUpdate()
+        private Vector3 ApplyTimeScale(Vector3 velocity)
+        {
+            return velocity * Round(Time.fixedDeltaTime);
+        }
+
+        private void ApplyVelocityToTransform()
+        {
+            lastPositionDelta = ApplyTimeScale(CurrentVelocity);
+            transform.position += lastPositionDelta;
+        }
+
+        private void Update()
         {
             lineRenderer.enabled = drawLine;
             if (drawLine)
@@ -198,7 +280,7 @@ namespace Assets.Code.Gameplay
                         {
                             ball.DrawExtrapolatedLine(hitInfo.normal * -1);
                         }
-
+                        //break;
                     }
 
                     currentDir = Vector3.Reflect(currentDir, hitInfo.normal);
@@ -215,7 +297,7 @@ namespace Assets.Code.Gameplay
 #if UNITY_EDITOR
         private void OnDrawGizmos()
         {
-            Vector3 extrapolatedPositon = transform.position + CurrentVelocity * Time.fixedDeltaTime;
+            Vector3 extrapolatedPositon = transform.position + ApplyTimeScale(ApplyDrag(CurrentVelocity));
             float distance = Vector3.Distance(transform.position, extrapolatedPositon);
             Gizmos.DrawSphere(transform.position + CurrentVelocity.normalized * distance, radius);
         }

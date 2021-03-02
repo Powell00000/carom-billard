@@ -4,18 +4,16 @@ using UnityEngine.UI;
 
 public class GameplayView : MonoBehaviour
 {
-    [Zenject.Inject]
-    GameplayController gameplayCtrl;
+    [Zenject.Inject] private GameplayController gameplayCtrl;
 
-    [SerializeField]
-    Button replayButton;
+    [SerializeField] private Button replayButton;
 
     private void Start()
     {
         replayButton.onClick.AddListener(Replay);
     }
 
-    void Replay()
+    private void Replay()
     {
         gameplayCtrl.Replay();
     }
