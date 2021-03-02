@@ -180,7 +180,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 5851df27c1f467a4fbff53880974f4f1, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 3df79308becfbee4e883d8e773ac84be, type: 3}
   m_Type: 3
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -424,7 +424,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1099711488}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 27bc8ed97332b934a9b9480353a612e7, type: 3}
+  m_Script: {fileID: 11500000, guid: d717ec9a7eaddfb4f908563a00ce58b6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   forceImage: {fileID: 630962981}
@@ -518,10 +518,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 1443495424}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5473a2cc7d464ca48bb8573fa1151d9d, type: 3}
+  m_Script: {fileID: 11500000, guid: bba80e3bdb981164f83c03520d39078c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  pointsText: {fileID: 1619106771}
+  pointsLabel: {fileID: 1619106771}
 --- !u!1 &1619106769
 GameObject:
   m_ObjectHideFlags: 0
@@ -834,7 +834,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 5851df27c1f467a4fbff53880974f4f1, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 3df79308becfbee4e883d8e773ac84be, type: 3}
   m_Type: 3
   m_PreserveAspect: 0
   m_FillCenter: 1

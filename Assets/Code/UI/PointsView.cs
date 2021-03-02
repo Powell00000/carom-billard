@@ -17,7 +17,7 @@ namespace Assets.Code.UI
 
         private void OnDestroy()
         {
-            pointsManager.PointsChanged -= OnPointsChanged
+            pointsManager.PointsChanged -= OnPointsChanged;
         }
 
         private void OnPointsChanged(int currentPoints)
