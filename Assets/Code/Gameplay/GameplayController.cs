@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 using Zenject;
 
@@ -16,22 +17,26 @@ namespace Assets.Code.Gameplay
             GameEnded
         }
 
+        [Inject] private PointsManager pointsManager;
         [Inject] private HitBallController hitBallCtrl;
+        [Inject] private StatsManager statsManager;
 
         private Ball[] balls;
         private SimpleStateMachine<GameState> gameplayState;
 
         private bool checkMovement = false;
 
+        private float gameplayTime;
+
         private bool ShouldUpdateBalls =>
             CurrentState == GameState.Playing
             || CurrentState == GameState.Replay
             || CurrentState == GameState.Waiting;
 
-        public System.Action OnGameStart;
-        public System.Action OnGameEnd;
-        public System.Action OnAllStopped;
-        public System.Action<GameState> OnStateChanged;
+        public Action OnGameStart;
+        public Action OnGameEnd;
+        public Action OnAllStopped;
+        public Action<GameState> OnStateChanged;
         public GameState CurrentState => gameplayState.CurrentState;
 
         public void Initialize()
@@ -42,6 +47,14 @@ namespace Assets.Code.Gameplay
             balls = FindObjectsOfType<Ball>();
             hitBallCtrl.BallHit += BallHit;
             StartGame();
+        }
+
+        private void CheckEndGame()
+        {
+            if (pointsManager.CurrentPoints == 3)
+            {
+                EndGame();
+            }
         }
 
         private void StateChanged(GameState currentState)
@@ -69,12 +82,15 @@ namespace Assets.Code.Gameplay
         private void StartGame()
         {
             gameplayState.ChangeState(GameState.Playing);
+            gameplayTime = 0;
         }
 
         public void EndGame()
         {
-            OnGameEnd?.Invoke();
+            statsManager.SetTimeSpent(TimeSpan.FromSeconds(gameplayTime));
             gameplayState.ChangeState(GameState.GameEnded);
+            OnGameEnd?.Invoke();
+            statsManager.SaveStats();
         }
 
         private void FixedUpdate()
@@ -88,6 +104,14 @@ namespace Assets.Code.Gameplay
                 balls[i].CustomUpdate();
             }
             CheckIfAnyMoving();
+        }
+
+        private void Update()
+        {
+            if (CurrentState == GameState.Playing)
+            {
+                gameplayTime += Time.deltaTime;
+            }
         }
 
         [ContextMenu("Replay")]
@@ -181,6 +205,7 @@ namespace Assets.Code.Gameplay
                 OnAllStopped?.Invoke();
                 gameplayState.ChangeState(GameState.Playing);
                 checkMovement = false;
+                CheckEndGame();
             }
         }
     }
