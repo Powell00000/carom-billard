@@ -21,6 +21,13 @@ namespace Assets.Code.Gameplay
         private Ball[] balls;
         private SimpleStateMachine<GameState> gameplayState;
 
+        private bool checkMovement = false;
+
+        private bool ShouldUpdateBalls =>
+            CurrentState == GameState.Playing
+            || CurrentState == GameState.Replay
+            || CurrentState == GameState.Waiting;
+
         public System.Action OnGameStart;
         public System.Action OnGameEnd;
         public System.Action OnAllStopped;
@@ -33,7 +40,7 @@ namespace Assets.Code.Gameplay
             SceneManager.LoadScene("UI", LoadSceneMode.Additive);
             gameplayState = new SimpleStateMachine<GameState>(GameState.None, StateChanged);
             balls = FindObjectsOfType<Ball>();
-            hitBallCtrl.BallHit += StoreData;
+            hitBallCtrl.BallHit += BallHit;
             StartGame();
         }
 
@@ -59,11 +66,6 @@ namespace Assets.Code.Gameplay
             }
         }
 
-        private void CalculatePoints()
-        {
-
-        }
-
         private void StartGame()
         {
             gameplayState.ChangeState(GameState.Playing);
@@ -75,6 +77,19 @@ namespace Assets.Code.Gameplay
             gameplayState.ChangeState(GameState.GameEnded);
         }
 
+        private void FixedUpdate()
+        {
+            if (!ShouldUpdateBalls)
+            {
+                return;
+            }
+            for (int i = 0; i < balls.Length; i++)
+            {
+                balls[i].CustomUpdate();
+            }
+            CheckIfAnyMoving();
+        }
+
         [ContextMenu("Replay")]
         public void Replay()
         {
@@ -84,12 +99,36 @@ namespace Assets.Code.Gameplay
             }
 
             gameplayState.ChangeState(GameState.Replay);
+
             for (int i = 0; i < balls.Length; i++)
             {
                 balls[i].Revert();
             }
 
             hitBallCtrl.Revert();
+        }
+
+        private void BallHit()
+        {
+            switch (CurrentState)
+            {
+                case GameState.None:
+                    break;
+                case GameState.Pause:
+                    break;
+                case GameState.Playing:
+                    StoreData();
+                    break;
+                case GameState.Replay:
+                    break;
+                case GameState.Waiting:
+                    break;
+                case GameState.GameEnded:
+                    break;
+                default:
+                    break;
+            }
+            checkMovement = true;
         }
 
         private void StoreData()
@@ -105,21 +144,13 @@ namespace Assets.Code.Gameplay
             }
         }
 
-        private void Update()
+        private void CheckIfAnyMoving()
         {
-            if (gameplayState.CurrentState == GameState.None
-                || gameplayState.CurrentState == GameState.Pause
-                || gameplayState.CurrentState == GameState.GameEnded
-                )
+            if (!checkMovement)
             {
                 return;
             }
 
-            CheckIfAnyMoving();
-        }
-
-        private void CheckIfAnyMoving()
-        {
             bool anyMoving = false;
             for (int i = 0; i < balls.Length; i++)
             {
@@ -147,12 +178,9 @@ namespace Assets.Code.Gameplay
             }
             else
             {
-                if (CurrentState == GameplayController.GameState.Waiting)
-                {
-                    OnAllStopped?.Invoke();
-                }
-
+                OnAllStopped?.Invoke();
                 gameplayState.ChangeState(GameState.Playing);
+                checkMovement = false;
             }
         }
     }

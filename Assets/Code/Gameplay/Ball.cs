@@ -8,9 +8,6 @@ namespace Assets.Code.Gameplay
     {
         public enum BallColor { White, Red, Yellow };
 
-        [Zenject.Inject]
-        private HitBallController hitBallCtrl;
-
         [SerializeField]
         internal BallColor color;
 
@@ -37,7 +34,7 @@ namespace Assets.Code.Gameplay
 
         public float Speed => CurrentVelocity.magnitude;
         public Vector3 CurrentVelocity;
-        public bool IsMoving => !rgbd.IsSleeping();
+        public bool IsMoving => Speed > 0;
 
         private void Awake()
         {
@@ -107,7 +104,7 @@ namespace Assets.Code.Gameplay
             }
         }
 
-        private void FixedUpdate()
+        public void CustomUpdate()
         {
             StickToTable();
             if (IsMoving)
@@ -158,8 +155,9 @@ namespace Assets.Code.Gameplay
         private void CastForObjects()
         {
             Vector3 extrapolatedPositon = transform.position + ApplyTimeScale(ApplyDrag(CurrentVelocity));
-            additionalSphereCollider.transform.position = extrapolatedPositon;
+            //additionalSphereCollider.transform.position = extrapolatedPositon;
             float distance = Vector3.Distance(transform.position, extrapolatedPositon);
+            distance = Round(distance);
             int hits = Physics.SphereCastNonAlloc(transform.position, radius, CurrentVelocity.normalized, hitInfos, distance, LayerMask.GetMask("Ball", "Band"));
             for (int i = 0; i < hits; i++)
             {
@@ -186,6 +184,7 @@ namespace Assets.Code.Gameplay
                     var velocitySum = otherVelocity + thisVelocity;
 
                     var dot = Vector3.Dot(CurrentVelocity.normalized, hitInfo.normal);
+                    dot = Round(dot);
                     var computedVelocity = CurrentVelocity * dot;
                     otherBall.AddVelocity(hitInfo.normal * -computedVelocity.magnitude);
                 }
@@ -194,6 +193,11 @@ namespace Assets.Code.Gameplay
             }
 
             rigidbodiesHit.Clear();
+        }
+
+        private float Round(float value)
+        {
+            return value;//Mathf.Round(value * 10000f) / 10000f;
         }
 
         protected virtual void OtherBallHit(ref Ball otherBall)
@@ -218,12 +222,12 @@ namespace Assets.Code.Gameplay
 
         private Vector3 ApplyDrag(Vector3 velocity)
         {
-            return velocity + velocity.normalized * -1 * Time.deltaTime;
+            return velocity + velocity.normalized * -1 * Round(Time.fixedDeltaTime);
         }
 
         private Vector3 ApplyTimeScale(Vector3 velocity)
         {
-            return velocity * Time.fixedDeltaTime;
+            return velocity * Round(Time.fixedDeltaTime);
         }
 
         private void ApplyVelocityToTransform()
@@ -276,7 +280,7 @@ namespace Assets.Code.Gameplay
                         {
                             ball.DrawExtrapolatedLine(hitInfo.normal * -1);
                         }
-                        break;
+                        //break;
                     }
 
                     currentDir = Vector3.Reflect(currentDir, hitInfo.normal);

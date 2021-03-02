@@ -26,7 +26,7 @@ namespace Assets.Code.Gameplay
         public void Initialize()
         {
             colorsCount = Enum.GetValues(typeof(Ball.BallColor)).Length;
-            inputCtrl.OnLeftButtonReleased += HitBall;
+            inputCtrl.OnLeftButtonReleased += OnLeftButtonReleased;
             inputCtrl.OnLeftButtonHold += IncrementForce;
             gameplayCtrl.OnAllStopped += CheckColorsHit;
         }
@@ -65,7 +65,7 @@ namespace Assets.Code.Gameplay
                 return;
             }
 
-            playingBall.AddVelocity(savedForce.SavedValue);
+            HitBall();
         }
 
         public void Store()
@@ -83,12 +83,17 @@ namespace Assets.Code.Gameplay
             playingBall.DrawExtrapolatedLine(cameraCtrl.LookDirection);
         }
 
-        private void HitBall()
+        private void OnLeftButtonReleased()
         {
             savedForce = new SaveableStruct<Vector3>(cameraCtrl.LookDirection * currentForce);
-            BallHit?.Invoke();
+            HitBall();
+        }
+
+        private void HitBall()
+        {
             playingBall.AddVelocity(savedForce.SavedValue);
             SetForce(0);
+            BallHit?.Invoke();
         }
 
         public void Dispose()
