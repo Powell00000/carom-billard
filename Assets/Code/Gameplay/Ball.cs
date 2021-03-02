@@ -115,7 +115,6 @@ namespace Assets.Code.Gameplay
             StickToTable();
             if (IsMoving)
             {
-                CastForOverlap();
                 CastForObjects();
             }
             CalculateSpeed();
@@ -123,47 +122,11 @@ namespace Assets.Code.Gameplay
             ApplyVelocityToTransform();
         }
 
-        private void OnCollisionEnter(Collision collision)
-        {
-            return;
-            if (collision.rigidbody.TryGetComponent<Ball>(out var otherBall))
-            {
-                OtherBallHit(ref otherBall);
-            }
-        }
-
-        private void CastForOverlap()
-        {
-            return;
-            int hits = Physics.OverlapSphereNonAlloc(transform.position, radius, overlapingColliders, LayerMask.GetMask("Ball", "Band"));
-            for (int i = 0; i < hits; i++)
-            {
-                var collider = overlapingColliders[i];
-                if (collider.attachedRigidbody == rgbd)
-                {
-                    continue;
-                }
-
-                //move back position by one frame
-                var previousPosition = transform.position - lastPositionDelta;
-                //calculate closest point on collider
-                var closestPoint = collider.ClosestPoint(previousPosition);
-                var surfaceNormal = (transform.position - closestPoint).normalized;
-
-                var dot = Vector3.Dot(CurrentVelocity.normalized, surfaceNormal);
-                float penetrationDepth = Vector3.Distance(closestPoint, transform.position);
-                penetrationDepth += Mathf.Sign(dot) * radius;
-
-                transform.position -= CurrentVelocity.normalized * penetrationDepth;
-            }
-        }
-
         private void CastForObjects()
         {
             Vector3 extrapolatedPositon = transform.position + ApplyTimeScale(ApplyDrag(CurrentVelocity));
-            //additionalSphereCollider.transform.position = extrapolatedPositon;
             float distance = Vector3.Distance(transform.position, extrapolatedPositon);
-            distance = Round(distance);
+            //distance = Round(distance);
             int hits = Physics.SphereCastNonAlloc(transform.position, radius, CurrentVelocity.normalized, hitInfos, distance, LayerMask.GetMask("Ball", "Band"));
             for (int i = 0; i < hits; i++)
             {
