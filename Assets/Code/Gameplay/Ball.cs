@@ -21,6 +21,7 @@ namespace Assets.Code.Gameplay
         private LineRenderer lineRenderer;
         private Vector3 lastPositionDelta;
 
+        private SaveableTransform initialTransform;
         private SaveableTransform savedTransform;
         private float radius;
         private Vector3 forceDirection;
@@ -36,13 +37,18 @@ namespace Assets.Code.Gameplay
         public Vector3 CurrentVelocity;
         public bool IsMoving => Speed > 0;
 
-        private void Awake()
-        {
-            Initialize();
-        }
-
         public virtual void Initialize()
         {
+            savedTransform = null;
+            if (initialTransform == null)
+            {
+                initialTransform = new SaveableTransform(transform);
+            }
+            else
+            {
+                ApplySavedTransform(initialTransform);
+            }
+
             hitPoints = new Vector3[maxLinePoints];
             overlapingColliders = new Collider[5];
             hitInfos = new RaycastHit[5];
@@ -252,8 +258,13 @@ namespace Assets.Code.Gameplay
                 return;
             }
 
-            transform.position = savedTransform.SavedValue.Position;
-            transform.rotation = savedTransform.SavedValue.Rotation;
+            ApplySavedTransform(savedTransform);
+        }
+
+        private void ApplySavedTransform(SaveableTransform saveableTransform)
+        {
+            transform.position = saveableTransform.SavedValue.Position;
+            transform.rotation = saveableTransform.SavedValue.Rotation;
         }
 
         public void Store()
@@ -263,6 +274,11 @@ namespace Assets.Code.Gameplay
 
         private void DrawHitLine()
         {
+            if (hitPoints == null)
+            {
+                return;
+            }
+
             Vector3 currentDir = forceDirection;
             Vector3 currentPos = transform.position;
             hitPoints[0] = currentPos;

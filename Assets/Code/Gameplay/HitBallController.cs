@@ -11,24 +11,40 @@ namespace Assets.Code.Gameplay
         [Inject] private CameraController cameraCtrl;
         [Inject] private InputController inputCtrl;
         [Inject] private PointsManager pointsManager;
+        [Inject] private StatsManager statsManager;
 
         [SerializeField] private MainBall playingBall;
 
         private SaveableStruct<Vector3> savedForce;
         private int colorsCount;
+        private float currentForce = 0;
+        private const float maxForce = 40f;
+        private int hitsMade;
 
         public Action BallHit;
         public Action<float, float> ForceChanged;
-
-        private float currentForce = 0;
-        private const float maxForce = 40f;
+        public int HitsMade => hitsMade;
 
         public void Initialize()
         {
-            colorsCount = Enum.GetValues(typeof(Ball.BallColor)).Length;
             inputCtrl.OnLeftButtonReleased += OnLeftButtonReleased;
             inputCtrl.OnLeftButtonHold += IncrementForce;
             gameplayCtrl.OnAllStopped += CheckColorsHit;
+            gameplayCtrl.OnGameEnd += OnGameEnd;
+            gameplayCtrl.OnGameStart += Init;
+            Init();
+        }
+
+        private void Init()
+        {
+            savedForce = null;
+            colorsCount = Enum.GetValues(typeof(Ball.BallColor)).Length;
+            hitsMade = 0;
+        }
+
+        private void OnGameEnd()
+        {
+            statsManager.SetShotsMade(hitsMade);
         }
 
         private void IncrementForce()
@@ -87,6 +103,7 @@ namespace Assets.Code.Gameplay
         {
             savedForce = new SaveableStruct<Vector3>(cameraCtrl.LookDirection * currentForce);
             HitBall();
+            hitsMade++;
         }
 
         private void HitBall()
@@ -98,7 +115,10 @@ namespace Assets.Code.Gameplay
 
         public void Dispose()
         {
-            inputCtrl.OnLeftButtonReleased -= HitBall;
+            inputCtrl.OnLeftButtonReleased -= OnLeftButtonReleased;
+            inputCtrl.OnLeftButtonHold -= IncrementForce;
+            gameplayCtrl.OnAllStopped -= CheckColorsHit;
+            gameplayCtrl.OnGameEnd -= OnGameEnd;
         }
     }
 }
