@@ -5,12 +5,12 @@ using Zenject;
 
 namespace Assets.Code.Gameplay
 {
-    internal class InputController : ITickable
+    internal class InputController : MonoBehaviour
     {
-        [Inject]
-        private GameplayController gameplayCtrl;
+        [Inject] private GameplayController gameplayCtrl;
 
-        public System.Action OnLeftButtonClick;
+        public System.Action OnHitButtonReleased;
+        public System.Action OnHitButtonHold;
 
         public float GetAxisCustom(string axisName)
         {
@@ -24,7 +24,7 @@ namespace Assets.Code.Gameplay
             }
         }
 
-        public void Tick()
+        private void Update()
         {
             if (gameplayCtrl.CurrentState != GameplayController.GameState.Playing)
             {
@@ -35,10 +35,14 @@ namespace Assets.Code.Gameplay
             {
                 return;
             }
-
-            if (Input.GetMouseButtonDown(0))
+            if (Input.GetKey(KeyCode.Space))
             {
-                OnLeftButtonClick?.Invoke();
+                OnHitButtonHold?.Invoke();
+            }
+
+            if (Input.GetKeyUp(KeyCode.Space))
+            {
+                OnHitButtonReleased?.Invoke();
             }
         }
     }
