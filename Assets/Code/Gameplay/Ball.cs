@@ -202,7 +202,7 @@ namespace Assets.Code.Gameplay
 
         private Vector3 ApplyDrag(Vector3 velocity)
         {
-            return velocity + velocity.normalized * -1 * Time.fixedDeltaTime;
+            return velocity + velocity.normalized * -3 * Time.fixedDeltaTime;
         }
 
         private Vector3 ApplyTimeScale(Vector3 velocity)

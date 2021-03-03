@@ -6,12 +6,14 @@ namespace Assets.Code.Gameplay
 {
     public class StatsManager : IInitializable
     {
-        [System.Serializable]
+        [Serializable]
         public struct Stats
         {
             public int Score;
             public int ShotsMade;
-            public TimeSpan TimeSpent;
+            public double GameplayTime;
+
+            public string FormattedGameplayTime => TimeSpan.FromSeconds(GameplayTime).ToString(@"hh\:mm\:ss");
         }
 
         private Stats currentStats;
@@ -47,7 +49,7 @@ namespace Assets.Code.Gameplay
 
         public void SetTimeSpent(TimeSpan timeSpent)
         {
-            currentStats.TimeSpent = timeSpent;
+            currentStats.GameplayTime = timeSpent.TotalSeconds;
         }
     }
 }

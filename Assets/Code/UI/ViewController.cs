@@ -5,6 +5,7 @@ public class ViewController : MonoBehaviour
 {
     [Zenject.Inject] private GameplayController gameplayCtrl;
 
+    [SerializeField] private GameObject mainMenu;
     [SerializeField] private GameObject gameplayView;
     [SerializeField] private GameObject endGameView;
 
@@ -17,6 +18,7 @@ public class ViewController : MonoBehaviour
 
     private void GameStateChanged(GameplayController.GameState currentState)
     {
+        mainMenu.SetActive(currentState == GameplayController.GameState.MainMenu);
         gameplayView.SetActive(currentState == GameplayController.GameState.Playing);
         endGameView.SetActive(currentState == GameplayController.GameState.GameEnded);
     }
