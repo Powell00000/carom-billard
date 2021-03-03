@@ -64,7 +64,7 @@ namespace Assets.Code.Gameplay
 
         private void CheckEndGame()
         {
-            if (pointsManager.CurrentPoints == 1)
+            if (pointsManager.CurrentPoints == 3)
             {
                 EndGame();
             }

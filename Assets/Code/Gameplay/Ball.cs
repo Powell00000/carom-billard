@@ -19,6 +19,8 @@ namespace Assets.Code.Gameplay
 
         [SerializeField]
         private LineRenderer lineRenderer;
+
+        [SerializeField] private AudioSource hitAudioSource;
         private Vector3 lastPositionDelta;
 
         private SaveableTransform initialTransform;
@@ -29,7 +31,6 @@ namespace Assets.Code.Gameplay
         private bool drawLine;
         private RaycastHit[] hitInfos;
         private HashSet<Rigidbody> rigidbodiesHit;
-        private Collider[] overlapingColliders;
 
         private static readonly short maxLinePoints = 3;
 
@@ -50,7 +51,6 @@ namespace Assets.Code.Gameplay
             }
 
             hitPoints = new Vector3[maxLinePoints];
-            overlapingColliders = new Collider[5];
             hitInfos = new RaycastHit[5];
             rigidbodiesHit = new HashSet<Rigidbody>();
             CalculateRadius();
@@ -63,30 +63,18 @@ namespace Assets.Code.Gameplay
 
         public void AddVelocity(Vector3 velocity)
         {
-            var energyLoss = CurrentVelocity.normalized * rgbd.mass;
-            if (energyLoss.magnitude >= velocity.magnitude)
-            {
-                return;
-            }
-
-            velocity -= energyLoss;
-            Debug.Log($"{name} added velocity {velocity}");
             CurrentVelocity += velocity;
+            CastForObjects();
         }
 
-        private void ReflectVelocityWithLoss(Vector3 reflectionNormal)
+        public void SetVelocity(Vector3 velocity)
         {
-            var energyLoss = CurrentVelocity.normalized * rgbd.mass;
-            if (energyLoss.magnitude >= CurrentVelocity.magnitude)
-            {
-                CurrentVelocity = Vector3.zero;
-                return;
-            }
-            else
-            {
-                CurrentVelocity -= energyLoss;
-            }
+            CurrentVelocity = velocity;
+            CastForObjects();
+        }
 
+        private void ReflectVelocity(Vector3 reflectionNormal)
+        {
             CurrentVelocity = Vector3.Reflect(CurrentVelocity, reflectionNormal);
         }
 
@@ -115,55 +103,17 @@ namespace Assets.Code.Gameplay
             StickToTable();
             if (IsMoving)
             {
-                CastForOverlap();
                 CastForObjects();
             }
             CalculateSpeed();
-
             ApplyVelocityToTransform();
-        }
-
-        private void OnCollisionEnter(Collision collision)
-        {
-            return;
-            if (collision.rigidbody.TryGetComponent<Ball>(out var otherBall))
-            {
-                OtherBallHit(ref otherBall);
-            }
-        }
-
-        private void CastForOverlap()
-        {
-            return;
-            int hits = Physics.OverlapSphereNonAlloc(transform.position, radius, overlapingColliders, LayerMask.GetMask("Ball", "Band"));
-            for (int i = 0; i < hits; i++)
-            {
-                var collider = overlapingColliders[i];
-                if (collider.attachedRigidbody == rgbd)
-                {
-                    continue;
-                }
-
-                //move back position by one frame
-                var previousPosition = transform.position - lastPositionDelta;
-                //calculate closest point on collider
-                var closestPoint = collider.ClosestPoint(previousPosition);
-                var surfaceNormal = (transform.position - closestPoint).normalized;
-
-                var dot = Vector3.Dot(CurrentVelocity.normalized, surfaceNormal);
-                float penetrationDepth = Vector3.Distance(closestPoint, transform.position);
-                penetrationDepth += Mathf.Sign(dot) * radius;
-
-                transform.position -= CurrentVelocity.normalized * penetrationDepth;
-            }
+            rigidbodiesHit.Clear();
         }
 
         private void CastForObjects()
         {
             Vector3 extrapolatedPositon = transform.position + ApplyTimeScale(ApplyDrag(CurrentVelocity));
-            //additionalSphereCollider.transform.position = extrapolatedPositon;
             float distance = Vector3.Distance(transform.position, extrapolatedPositon);
-            distance = Round(distance);
             int hits = Physics.SphereCastNonAlloc(transform.position, radius, CurrentVelocity.normalized, hitInfos, distance, LayerMask.GetMask("Ball", "Band"));
             for (int i = 0; i < hits; i++)
             {
@@ -184,30 +134,54 @@ namespace Assets.Code.Gameplay
                 if (hitInfo.rigidbody.TryGetComponent<Ball>(out var otherBall))
                 {
                     OtherBallHit(ref otherBall);
+
                     var otherVelocity = otherBall.CurrentVelocity;
                     var thisVelocity = CurrentVelocity;
 
+                    var otherNewVelocity = thisVelocity;
+                    var thisNewVelocity = otherVelocity;
+
+                    var dotOfVelocities = Vector3.Dot(thisVelocity.normalized, otherVelocity.normalized);
+                    if (dotOfVelocities > 0)
+                    {
+
+                    }
+                    else if (dotOfVelocities < 0)
+                    {
+                        var perpendicularNormal = Vector3.Cross(Vector3.up, hitInfo.normal).normalized;
+                        otherNewVelocity = Vector3.Reflect(thisVelocity, perpendicularNormal);
+                        thisNewVelocity = Vector3.Reflect(otherVelocity, perpendicularNormal);
+                    }
+                    else if (dotOfVelocities == 0)
+                    {
+                        otherNewVelocity = thisVelocity;
+                        thisNewVelocity = Vector3.Reflect(thisVelocity, hitInfo.normal);
+                    }
+
+                    otherBall.SetVelocity(otherNewVelocity);
+                    SetVelocity(thisNewVelocity);
+
+                    /*
                     var velocitySum = otherVelocity + thisVelocity;
 
                     var dot = Vector3.Dot(CurrentVelocity.normalized, hitInfo.normal);
-                    dot = Round(dot);
                     var computedVelocity = CurrentVelocity * dot;
                     otherBall.AddVelocity(hitInfo.normal * -computedVelocity.magnitude);
+                    */
                 }
-                Debug.Log($"{name} hit {hitInfo.rigidbody.gameObject.name}");
-                ReflectVelocityWithLoss(hitInfo.normal);
+                else
+                {
+                    ReflectVelocity(hitInfo.normal);
+                }
+
             }
 
-            rigidbodiesHit.Clear();
-        }
-
-        private float Round(float value)
-        {
-            return value;//Mathf.Round(value * 10000f) / 10000f;
         }
 
         protected virtual void OtherBallHit(ref Ball otherBall)
         {
+            hitAudioSource.volume = Speed / HitBallController.MaxForce;
+            hitAudioSource.Play();
         }
 
         private void CalculateSpeed()
@@ -228,12 +202,12 @@ namespace Assets.Code.Gameplay
 
         private Vector3 ApplyDrag(Vector3 velocity)
         {
-            return velocity + velocity.normalized * -1 * Round(Time.fixedDeltaTime);
+            return velocity + velocity.normalized * -1 * Time.fixedDeltaTime;
         }
 
         private Vector3 ApplyTimeScale(Vector3 velocity)
         {
-            return velocity * Round(Time.fixedDeltaTime);
+            return velocity * Time.fixedDeltaTime;
         }
 
         private void ApplyVelocityToTransform()
