@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -10,7 +11,7 @@ namespace Assets.Code.Gameplay
     {
         public enum GameState
         {
-            None,
+            MainMenu,
             Pause,
             Playing,
             Replay,
@@ -47,7 +48,8 @@ namespace Assets.Code.Gameplay
         {
             Application.targetFrameRate = 60;
             SceneManager.LoadScene("UI", LoadSceneMode.Additive);
-            gameplayState = new SimpleStateMachine<GameState>(GameState.None, StateChanged);
+            gameplayState = new SimpleStateMachine<GameState>(GameState.MainMenu, StateChanged);
+            hitBallCtrl.BallHit += BallHit;
             Init();
         }
 
@@ -58,8 +60,6 @@ namespace Assets.Code.Gameplay
             {
                 balls[i].Initialize();
             }
-            hitBallCtrl.BallHit += BallHit;
-            StartGame();
         }
 
         private void CheckEndGame()
@@ -75,7 +75,7 @@ namespace Assets.Code.Gameplay
             OnStateChanged?.Invoke(currentState);
             switch (currentState)
             {
-                case GameState.None:
+                case GameState.MainMenu:
                     break;
                 case GameState.Pause:
                     break;
@@ -92,8 +92,9 @@ namespace Assets.Code.Gameplay
             }
         }
 
-        private void StartGame()
+        public void StartGame()
         {
+            Init();
             OnGameStart?.Invoke();
             gameplayState.ChangeState(GameState.Playing);
             gameplayTime = 0;
@@ -101,7 +102,7 @@ namespace Assets.Code.Gameplay
 
         public void Restart()
         {
-            Init();
+            StartGame();
         }
 
         private void EndGame()
@@ -110,6 +111,11 @@ namespace Assets.Code.Gameplay
             OnGameEnd?.Invoke();
             statsManager.SaveStats();
             gameplayState.ChangeState(GameState.GameEnded);
+        }
+
+        public void GoToMainMenu()
+        {
+            gameplayState.ChangeState(GameState.MainMenu);
         }
 
         private void FixedUpdate()
@@ -149,6 +155,12 @@ namespace Assets.Code.Gameplay
                 balls[i].Revert();
             }
 
+            StartCoroutine(RevertHit());
+        }
+
+        private IEnumerator RevertHit()
+        {
+            yield return new WaitForSeconds(1f);
             hitBallCtrl.Revert();
         }
 
@@ -156,7 +168,7 @@ namespace Assets.Code.Gameplay
         {
             switch (CurrentState)
             {
-                case GameState.None:
+                case GameState.MainMenu:
                     break;
                 case GameState.Pause:
                     break;
@@ -205,7 +217,7 @@ namespace Assets.Code.Gameplay
             {
                 switch (gameplayState.CurrentState)
                 {
-                    case GameState.None:
+                    case GameState.MainMenu:
                         break;
                     case GameState.Pause:
                         break;
