@@ -16,6 +16,7 @@ MonoBehaviour:
   rgbd: {fileID: 3666570158526253653}
   additionalSphereCollider: {fileID: 4707290769673572471}
   lineRenderer: {fileID: 6634165701995028923}
+  hitAudioSource: {fileID: 412096460572107226}
   CurrentVelocity: {x: 0, y: 0, z: 0}
 --- !u!1001 &3731991880260584576
 PrefabInstance:
@@ -83,6 +84,11 @@ GameObject:
 --- !u!54 &3666570158526253653 stripped
 Rigidbody:
   m_CorrespondingSourceObject: {fileID: 83585928703135445, guid: 4a872c5151c1c5f428a0ad6030ed87e9, type: 3}
+  m_PrefabInstance: {fileID: 3731991880260584576}
+  m_PrefabAsset: {fileID: 0}
+--- !u!82 &412096460572107226 stripped
+AudioSource:
+  m_CorrespondingSourceObject: {fileID: 3923406427121231194, guid: 4a872c5151c1c5f428a0ad6030ed87e9, type: 3}
   m_PrefabInstance: {fileID: 3731991880260584576}
   m_PrefabAsset: {fileID: 0}
 --- !u!135 &4707290769673572471 stripped
