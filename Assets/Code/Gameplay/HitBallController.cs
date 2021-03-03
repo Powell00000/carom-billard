@@ -18,7 +18,7 @@ namespace Assets.Code.Gameplay
         private SaveableStruct<Vector3> savedForce;
         private int colorsCount;
         private float currentForce = 0;
-        private const float maxForce = 40f;
+        public const float MaxForce = 40f;
         private int hitsMade;
 
         public Action BallHit;
@@ -49,14 +49,14 @@ namespace Assets.Code.Gameplay
 
         private void IncrementForce()
         {
-            currentForce += Time.deltaTime * maxForce;
+            currentForce += Time.deltaTime * MaxForce;
             SetForce(currentForce);
         }
 
         private void SetForce(float current)
         {
-            currentForce = Mathf.Clamp(current, 0, maxForce);
-            ForceChanged?.Invoke(currentForce, maxForce);
+            currentForce = Mathf.Clamp(current, 0, MaxForce);
+            ForceChanged?.Invoke(currentForce, MaxForce);
         }
 
         private void CheckColorsHit()
