@@ -9,8 +9,8 @@ namespace Assets.Code.Gameplay
     {
         [Inject] private GameplayController gameplayCtrl;
 
-        public System.Action OnLeftButtonReleased;
-        public System.Action OnLeftButtonHold;
+        public System.Action OnHitButtonReleased;
+        public System.Action OnHitButtonHold;
 
         public float GetAxisCustom(string axisName)
         {
@@ -35,14 +35,14 @@ namespace Assets.Code.Gameplay
             {
                 return;
             }
-            if (Input.GetMouseButton(0))
+            if (Input.GetKey(KeyCode.Space))
             {
-                OnLeftButtonHold?.Invoke();
+                OnHitButtonHold?.Invoke();
             }
 
-            if (Input.GetMouseButtonUp(0))
+            if (Input.GetKeyUp(KeyCode.Space))
             {
-                OnLeftButtonReleased?.Invoke();
+                OnHitButtonReleased?.Invoke();
             }
         }
     }

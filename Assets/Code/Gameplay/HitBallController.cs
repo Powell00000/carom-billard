@@ -27,8 +27,8 @@ namespace Assets.Code.Gameplay
 
         public void Initialize()
         {
-            inputCtrl.OnLeftButtonReleased += OnLeftButtonReleased;
-            inputCtrl.OnLeftButtonHold += IncrementForce;
+            inputCtrl.OnHitButtonReleased += OnLeftButtonReleased;
+            inputCtrl.OnHitButtonHold += IncrementForce;
             gameplayCtrl.OnAllStopped += CheckColorsHit;
             gameplayCtrl.OnGameEnd += OnGameEnd;
             gameplayCtrl.OnGameStart += Init;
@@ -115,8 +115,8 @@ namespace Assets.Code.Gameplay
 
         public void Dispose()
         {
-            inputCtrl.OnLeftButtonReleased -= OnLeftButtonReleased;
-            inputCtrl.OnLeftButtonHold -= IncrementForce;
+            inputCtrl.OnHitButtonReleased -= OnLeftButtonReleased;
+            inputCtrl.OnHitButtonHold -= IncrementForce;
             gameplayCtrl.OnAllStopped -= CheckColorsHit;
             gameplayCtrl.OnGameEnd -= OnGameEnd;
         }
